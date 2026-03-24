@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Restock — Reorder</title>
+<link rel="stylesheet" href="css/app.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="js/topnav.js"></script>
+<script src="js/cart.js"></script>
+</head>
+<body>
+<div id="nav-mount"></div>
+
+<div class="page">
+  <div class="page-hd">
+    <div>
+      <div class="page-title">Reorder</div>
+      <div class="page-desc">Select products and build a order</div>
+    </div>
+    <!-- Legend: urgency dot meanings -->
+    <div style="display:flex;align-items:center;gap:20px;padding:10px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm)">
+      <span style="font-size:11px;font-weight:500;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.06em;margin-right:4px">Status</span>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span class="urg-dot critical legend-dot" style="display:inline-block;flex-shrink:0"></span>
+        <span style="font-size:12.5px;color:var(--foreground);font-weight:500">Order now</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span class="urg-dot warning legend-dot" style="display:inline-block;flex-shrink:0"></span>
+        <span style="font-size:12.5px;color:var(--foreground);font-weight:500">Order soon</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-toolbar">
+      <input class="tbl-search" placeholder="Search product or EAN…" id="q" oninput="renderTable()"/>
+      <div id="filter-chips" style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="chip active" onclick="setF('all',this)">All</div>
+        <div class="chip" onclick="setF('critical',this)">Critical</div>
+        <div class="chip" onclick="setF('warning',this)">Reorder soon</div>
+        <div class="chip" onclick="setF('safe',this)">Safe</div>
+        <div class="chip" onclick="setF('ordered',this)">In transit</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <select class="tbl-search" style="max-width:160px;cursor:pointer" id="supplier-filter" onchange="curPage=1;renderTable()">
+          <option value="">All Suppliers</option>
+          <option value="seoul-beauty">Seoul Beauty Co.</option>
+          <option value="brand-direct">Brand Direct Korea</option>
+          <option value="eu-dist">EU Distributor</option>
+        </select>
+        <select class="tbl-search" style="max-width:150px;cursor:pointer" id="brand-filter" onchange="curPage=1;renderTable()">
+          <option value="">All Brands</option>
+          <option>Medicube</option><option>Anua</option><option>Round Lab</option><option>COSRX</option><option>Isntree</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table class="data-tbl" id="reorder-tbl" style="table-layout:fixed;width:100%;min-width:1000px">
+        <colgroup>
+          <col style="width:38px">
+          <col style="width:88px">
+          <col style="width:260px">
+          <col style="width:76px">
+          <col style="width:72px">
+          <col style="width:64px">
+          <col style="width:100px">
+          <col style="width:105px">
+          <col style="width:120px">
+          <col style="width:155px">
+        </colgroup>
+        <thead><tr>
+          <th><div class="cb" id="cb-all" onclick="toggleAll()"></div></th>
+          <th></th>
+          <th>Product</th>
+          <th style="text-align:center">Brand</th>
+          <th style="text-align:center">Stock</th>
+          <th style="text-align:center;line-height:1.3">Daily<br>sales</th>
+          <th style="text-align:center;line-height:1.3">Order<br>within</th>
+          <th style="text-align:center;line-height:1.3">Potential<br>loss</th>
+          <th style="text-align:center;line-height:1.3">Suggested qty<br>to order</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div style="padding:11px 16px;background:var(--muted);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span id="row-label" style="font-size:12px;color:var(--muted-foreground)">—</span>
+      <div id="pagination" style="display:flex;align-items:center;gap:4px"></div>
+    </div>
+  </div>
+
+  <div class="selection-bar hidden" id="sticky">
+    <span><strong id="sc">0</strong> selected</span>
+    <div class="sel-sep"></div>
+    <span><strong id="su">0</strong> units</span>
+    <div class="sel-spacer"></div>
+    <button class="sel-btn" onclick="addSelectionToCart()">Add to order →</button>
+  </div>
+</div>
+
+<!-- PO PANEL -->
+<div class="overlay-backdrop" id="po-bg" onclick="if(event.target===this)closePanel('po-bg')">
+  <div class="overlay-panel">
+    <div class="op-section" style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div class="op-title">New Order</div>
+        <div style="font-size:13.5px;color:var(--muted-foreground);margin-top:4px">Draft · PO-2024-019</div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <span class="badge badge-zinc"><span id="pc">0</span> products</span>
+          <span class="badge badge-zinc"><span id="pu">0</span> units</span>
+        </div>
+      </div>
+      <button class="close-x" onclick="closePanel('po-bg')">✕</button>
+    </div>
+
+    <div style="padding:8px 20px;background:var(--muted);border-bottom:1px solid var(--border);display:grid;grid-template-columns:44px 1fr 110px 28px;gap:12px;font-size:10px;font-weight:500;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.07em">
+      <div></div><div>Product</div><div style="text-align:right">Qty</div><div></div>
+    </div>
+    <div class="op-scroll" id="po-list"></div>
+
+    <div style="padding:0 20px 10px">
+      <textarea class="form-input" style="height:48px;resize:none;font-size:14px" placeholder="Notes (optional)…"></textarea>
+    </div>
+
+    <div class="op-footer">
+      <button class="btn btn-default" style="width:100%;font-size:15px;padding:13px 18px;font-weight:600" onclick="submitPO()">Submit Order →</button>
+      <button class="btn btn-outline" style="width:100%;font-size:14px">Save as draft</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-backdrop" id="ex-bg" onclick="if(event.target===this)closeExport()">
+  <div class="modal-card" style="text-align:center">
+    <div style="width:52px;height:52px;border-radius:50%;background:var(--success-bg);border:1px solid var(--success-border);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:22px">✓</div>
+    <div style="font-size:17px;font-weight:600;letter-spacing:-0.025em;margin-bottom:6px">Export ready</div>
+    <div style="font-size:14px;color:var(--muted-foreground);margin-bottom:16px">Your order is ready to send.</div>
+    <div style="display:flex;gap:10px;align-items:center;padding:12px;background:var(--muted);border-radius:var(--radius-lg);border:1px solid var(--border);margin-bottom:20px;text-align:left">
+      <div style="width:38px;height:38px;background:var(--success-bg);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📊</div>
+      <div><div style="font-size:14px;font-weight:600">PO-2024-019.xlsx</div><div id="ex-details" style="font-size:11px;color:var(--muted-foreground)">—</div></div>
+    </div>
+    <div id="ex-mark" style="font-size:12px;color:var(--muted-foreground);background:var(--muted);border-radius:var(--radius);padding:9px 12px;margin-bottom:18px;text-align:left;border:1px solid var(--border)"></div>
+    <button class="btn btn-default" style="width:100%" onclick="closeExport()">Done</button>
+  </div>
+</div>
+
+<script>
+// Images: Ulta Beauty CDN (real product photos)
+const products = [
+  {sku:'MED-001',ean:'8809648920014',name:'Medicube – Age-R Glutathione Glow Capsule Cream, 50ml', brand:'Medicube',stock:120,daily:14,days:8,  risk:8960, cost:5.80, sugQty:1200,urg:'critical',imgUrl:'https://media.ulta.com/i/ulta/2645368?w=160&h=160&fmt=auto'},
+  {sku:'ANU-001',ean:'8809663754018',name:'Heartleaf Toner',      brand:'Anua',    stock:63, daily:9, days:7,  risk:7200, cost:8.90, sugQty:800, urg:'critical',imgUrl:'https://media.ulta.com/i/ulta/2634190?w=160&h=160&fmt=auto',ordered:{qty:800,arrival:'Apr 6',po:'PO-2024-017',status:'transit'}},
+  {sku:'MED-002',ean:'8809648920021',name:'Collagen Mask',        brand:'Medicube',stock:90, daily:9, days:10, risk:5940, cost:6.50, sugQty:800, urg:'critical',imgUrl:'https://media.ulta.com/i/ulta/2645369?w=160&h=160&fmt=auto'},
+  {sku:'ISN-001',ean:'8809530042718',name:'Hyaluronic Foam',      brand:'Isntree', stock:18, daily:5, days:3,  risk:1350, cost:4.80, sugQty:300, urg:'critical',imgUrl:'https://media.ulta.com/i/ulta/2636336?w=160&h=160&fmt=auto',ordered:{qty:300,arrival:'Mar 29',po:'PO-2024-018',status:'awaiting'}},
+  {sku:'MED-003',ean:'8809648920038',name:'Deep Vita C Serum',    brand:'Medicube',stock:55, daily:7, days:7,  risk:3990, cost:7.20, sugQty:600, urg:'critical',imgUrl:'https://media.ulta.com/i/ulta/2645352?w=160&h=160&fmt=auto'},
+  {sku:'ANU-002',ean:'8809663754025',name:'Peach Niacinamide',    brand:'Anua',    stock:80, daily:8, days:10, risk:4800, cost:7.50, sugQty:600, urg:'critical',imgUrl:'https://media.ulta.com/i/ulta/2634191?w=160&h=160&fmt=auto'},
+  {sku:'MED-006',ean:'8809648920069',name:'Red Erasing Serum',    brand:'Medicube',stock:142,daily:8, days:17, risk:1840, cost:11.20,sugQty:500, urg:'warning', imgUrl:'https://media.ulta.com/i/ulta/2645357?w=160&h=160&fmt=auto'},
+  {sku:'MED-007',ean:'8809648920076',name:'Zero Pore Pad',        brand:'Medicube',stock:88, daily:6, days:14, risk:1260, cost:4.90, sugQty:400, urg:'warning', imgUrl:'https://media.ulta.com/i/ulta/2645351?w=160&h=160&fmt=auto'},
+  {sku:'MED-004',ean:'8809648920045',name:'Age-R Booster Pro',    brand:'Medicube',stock:210,daily:5, days:42, risk:0,    cost:9.10, sugQty:400, urg:'safe',    imgUrl:'https://media.ulta.com/i/ulta/2645350?w=160&h=160&fmt=auto'},
+  {sku:'COS-001',ean:'8809697770018',name:'Snail Mucin Essence',  brand:'COSRX',   stock:160,daily:4, days:40, risk:0,    cost:6.20, sugQty:0,   urg:'safe',    imgUrl:'https://media.ulta.com/i/ulta/2504912?w=160&h=160&fmt=auto'},
+  {sku:'MED-005',ean:'8809648920052',name:'Aqua Soothing Essence',brand:'Medicube',stock:340,daily:3, days:113,risk:0,    cost:8.40, sugQty:0,   urg:'safe',    imgUrl:'https://media.ulta.com/i/ulta/2645370?w=160&h=160&fmt=auto'},
+  {sku:'MED-008',ean:'8809648920083',name:'Glutathione Eye Cream',brand:'Medicube',stock:260,daily:4, days:65, risk:0,    cost:12.00,sugQty:0,   urg:'safe',    imgUrl:'https://media.ulta.com/i/ulta/2645357?w=160&h=160&fmt=auto'},
+];
+const maxRisk = Math.max(...products.map(p => p.risk));
+const sel = new Set(); let filt='all', moOn=false, poQtys={};
+
+function vis() {
+  const q=(document.getElementById('q').value||'').toLowerCase();
+  const bf=document.getElementById('brand-filter').value;
+  const sf=document.getElementById('supplier-filter').value;
+  return products.filter(p=>{
+    const pSupId = (typeof BRAND_SUPPLIER!=='undefined') ? BRAND_SUPPLIER[p.brand] : '';
+    const mf=filt==='all'||(filt==='ordered'&&!!p.ordered)||(!p.ordered&&(filt===p.urg||(filt==='warning'&&p.urg==='warning')));
+    const sfMatch = !sf || pSupId === sf;
+    const mq=!q||p.name.toLowerCase().includes(q)||p.ean.includes(q)||p.brand.toLowerCase().includes(q);
+    return mf&&mq&&(!bf||p.brand===bf);
+  }).sort((a,b)=>{
+    // Priority: critical(0) > warning(1) > ordered(2) > safe(3)
+    const rank=p=>p.ordered?2:p.urg==='critical'?0:p.urg==='warning'?1:3;
+    const ra=rank(a), rb=rank(b);
+    if(ra!==rb) return ra-rb;
+    // Within same group: sort by days ascending then risk descending
+    if(a.days!==b.days) return a.days-b.days;
+    return b.risk-a.risk;
+  });
+}
+
+const PAGE_SIZE = 8;
+let curPage = 1;
+
+function renderTable() {
+  const allRows=vis();
+  const totalPages=Math.max(1,Math.ceil(allRows.length/PAGE_SIZE));
+  curPage=Math.min(curPage,totalPages);
+  const rows=allRows.slice((curPage-1)*PAGE_SIZE, curPage*PAGE_SIZE);
+  const tb=document.getElementById('tbody'); tb.innerHTML='';
+  const badgeOf=u=>u==='critical'?'badge-red':u==='warning'?'badge-amber':'badge-green';
+  rows.forEach(p=>{
+    const ord=!!p.ordered, isSel=sel.has(p.sku)&&!ord;
+    const rc=p.risk>0?(p.urg==='critical'?'destructive':'warning'):'zero';
+    const rp=p.risk>0?Math.round(p.risk/maxRisk*100):0;
+    const dotC=ord?'ordered':(p.urg==='safe'?null:p.urg);
+    const init=p.name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    const tr=document.createElement('tr');
+    if(isSel) tr.className='row-selected';
+    if(ord) { 
+      tr.style.cssText = 'background:#f0f0f0';
+      tr.classList.add('row-ordered'); 
+    }
+    tr.innerHTML=`
+      <td><div class="cb${isSel?' checked':''}${ord?' style_disabled':''}" onclick="toggleRow('${p.sku}',event)" ${ord?'style="opacity:.3;pointer-events:none"':''}></div></td>
+      <td style="padding:6px 10px">
+        <div style="position:relative;width:77px;height:77px;flex-shrink:0">
+          <div style="width:77px;height:77px;border-radius:10px;overflow:hidden;background:var(--zinc-100);border:1px solid var(--zinc-200)">
+            <img src="${p.imgUrl}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\"display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:11px;font-weight:600;color:var(--zinc-400)\">${init}</span>'">
+          </div>
+        </div>
+      </td>
+      <td>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+            ${(dotC && dotC !== 'ordered')?`<span class="urg-dot ${dotC}" style="display:block;margin:0;flex-shrink:0"></span>`:''}
+            <strong style="font-size:14px;font-weight:600;letter-spacing:-0.02em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35">${p.name}</strong>
+          </div>
+          <div style="font-size:12px;color:var(--muted-foreground);margin-top:2px;${(dotC && dotC!=='ordered')?'padding-left:20px':''}">${p.ean}</div>
+          ${ord ? `<span style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;font-size:12px;font-weight:600;white-space:nowrap;
+            padding:4px 10px;border-radius:6px;
+            background:${p.ordered.status==='awaiting'?'var(--warning-bg)':'var(--info-bg)'};
+            border:1px solid ${p.ordered.status==='awaiting'?'var(--warning-border)':'var(--info-border)'};
+            color:${p.ordered.status==='awaiting'?'var(--warning-fg)':'var(--info-fg)'}">
+            <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;background:${p.ordered.status==='awaiting'?'#f59e0b':'var(--info)'}"></span>
+            ${p.ordered.status==='awaiting'?'Awaiting confirmation':'In transit · '+p.ordered.arrival} · ${p.ordered.po}
+          </span>` : ''}
+        </div>
+        </div>
+      </td>
+      <td style="color:var(--muted-foreground);text-align:center">${p.brand}</td>
+      <td style="font-variant-numeric:tabular-nums;text-align:center">${p.stock}</td>
+      <td style="color:var(--muted-foreground);text-align:center">${p.daily}/day</td>
+      <td style="text-align:center">${ord?`<div><span class="badge ${badgeOf(p.urg)}" style="opacity:.6">${p.days}d<br><span style="font-size:10px;color:var(--zinc-400);display:block">covered</span></span></div>`:`<span class="badge ${badgeOf(p.urg)}" style="white-space:nowrap">${p.days} days</span>`}</td>
+      <td style="text-align:center;vertical-align:middle">
+        <div style="display:inline-flex;flex-direction:column;gap:5px;min-width:80px;align-items:center">
+          <span class="risk-val ${ord?'zero':rc}">${ord?'—':(p.risk>0?'€'+p.risk.toLocaleString():'—')}</span>
+          ${!ord&&p.risk>0?`<div class="risk-track" style="width:100%"><div class="risk-fill ${rc}" style="width:${rp}%"></div></div>`:''}
+        </div>
+      </td>
+      <td style="font-variant-numeric:tabular-nums;text-align:center">
+        ${ord
+          ? `<s style="opacity:.35;font-weight:600;font-size:16px">${p.sugQty>0?p.sugQty.toLocaleString():'—'}</s>`
+          : p.sugQty>0
+            ? `<div style="font-weight:700;font-size:15px">${p.sugQty.toLocaleString()}</div>`
+            : '—'}
+      </td>
+
+      <td style="white-space:nowrap">
+        ${ord
+          ? `<a href="orders.html" class="btn btn-outline btn-sm" style="font-weight:600;border-color:var(--zinc-300)">Track order →</a>`
+          : `<div style="display:flex;align-items:center;gap:6px">
+               <button class="btn btn-default btn-sm" id="add-btn-${p.sku}"
+                 onclick="addSingleToCart('${p.sku}',event)"
+                 style="font-weight:600;font-size:14px;padding:7px 14px">Add to order</button>
+               <button title="View details"
+                 style="width:34px;height:34px;border-radius:var(--radius);border:1.5px solid var(--border);
+                        background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;
+                        color:var(--muted-foreground);transition:all .12s;flex-shrink:0"
+                 onclick="openProdDetail('${p.sku}',event)"
+                 onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'"
+                 onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted-foreground)'">
+                 <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                   <path d="M3 17V9M7 17V5M11 17V11M15 17V7"/>
+                 </svg>
+               </button>
+             </div>`
+        }
+      </td>
+    `;
+    tb.appendChild(tr);
+  });
+  const start=(curPage-1)*PAGE_SIZE;
+  const end=Math.min(start+rows.length, allRows.length);
+  document.getElementById('row-label').textContent=allRows.length===0?'No products match':`Showing ${start+1}–${end} of ${allRows.length} products · sorted by urgency`;
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  const pg=document.getElementById('pagination');
+  if(!pg) return;
+  pg.innerHTML='';
+  if(totalPages<=1) return;
+
+  function mkBtn(label,page,disabled,active) {
+    const b=document.createElement('button');
+    b.textContent=label;
+    b.disabled=disabled;
+    b.style.cssText=`min-width:30px;height:30px;padding:0 6px;border-radius:6px;border:1px solid ${active?'var(--foreground)':'var(--border)'};background:${active?'var(--foreground)':'var(--card)'};color:${active?'var(--card)':'var(--foreground)'};font-size:14px;font-weight:${active?'600':'400'};cursor:${disabled?'not-allowed':'pointer'};opacity:${disabled?'.38':'1'};font-family:inherit;transition:background .1s`;
+    if(!disabled) b.onclick=()=>{curPage=page;renderTable();};
+    return b;
+  }
+
+  pg.appendChild(mkBtn('←',curPage-1,curPage===1,false));
+
+  let pages=[];
+  if(totalPages<=7) {
+    pages=Array.from({length:totalPages},(_,i)=>i+1);
+  } else {
+    pages=[1];
+    if(curPage>3) pages.push('…');
+    for(let i=Math.max(2,curPage-1);i<=Math.min(totalPages-1,curPage+1);i++) pages.push(i);
+    if(curPage<totalPages-2) pages.push('…');
+    pages.push(totalPages);
+  }
+
+  pages.forEach(p=>{
+    if(p==='…') {
+      const s=document.createElement('span');
+      s.textContent='…'; s.style.cssText='padding:0 4px;color:var(--muted-foreground);font-size:14px';
+      pg.appendChild(s);
+    } else {
+      pg.appendChild(mkBtn(p,p,false,p===curPage));
+    }
+  });
+
+  pg.appendChild(mkBtn('→',curPage+1,curPage===totalPages,false));
+}
+
+function toggleRow(sku,e){
+  e.stopPropagation();const p=products.find(x=>x.sku===sku);if(p?.ordered)return;sel.has(sku)?sel.delete(sku):sel.add(sku);updateBar();renderTable();}
+function toggleAll(){const v=vis().filter(p=>!p.ordered);const all=v.every(p=>sel.has(p.sku));v.forEach(p=>all?sel.delete(p.sku):sel.add(p.sku));const cb=document.getElementById('cb-all');cb.className='cb'+(sel.size?(v.every(p=>sel.has(p.sku))?' checked':' indeterminate'):'');updateBar();renderTable();}
+function setF(f,el){filt=f;curPage=1;document.querySelectorAll('#filter-chips .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTable();}
+function updateBar(){const sp=products.filter(p=>sel.has(p.sku));const bar=document.getElementById('sticky');bar.classList.toggle('hidden',!sp.length);if(sp.length){document.getElementById('sc').textContent=sp.length;document.getElementById('su').textContent=sp.reduce((a,p)=>a+p.sugQty,0).toLocaleString();}}
+function openPO(){const sp=products.filter(p=>sel.has(p.sku)&&p.sugQty>0);if(!sp.length){showToast('Select at least one product first');return;}sp.forEach(p=>poQtys[p.sku]=p.sugQty);renderPO(sp);openPanel('po-bg');}
+function renderPO(items){const list=document.getElementById('po-list');list.innerHTML='';let sub=0,units=0;items.filter(p=>poQtys[p.sku]!=null).forEach(p=>{const q=poQtys[p.sku];sub+=q*p.cost;units+=q;const ed=q!==p.sugQty;const row=document.createElement('div');row.className='op-row';row.style.cssText='grid-template-columns:44px 1fr 110px 28px';row.innerHTML=`<div style="flex-shrink:0"><div style="width:44px;height:44px;border-radius:8px;overflow:hidden;background:var(--zinc-100);border:1px solid var(--zinc-200)"><img src="${p.imgUrl}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.style.display='none'"></div></div><div><div style="font-size:14px;font-weight:500">${p.name}</div><div style="font-size:12px;color:var(--muted-foreground)">${p.ean} · €${p.cost.toFixed(2)}/unit${ed?` · <span style="color:var(--info-fg)">Suggested: ${p.sugQty.toLocaleString()}</span>`:''}</div></div><div><input class="qty-field${ed?' edited':''}" type="number" min="0" value="${q}" onchange="chQty('${p.sku}',this.value,items)"/></div><button class="rm-x" onclick="rmItem('${p.sku}',items)">×</button>`;list.appendChild(row);});document.getElementById('pc').textContent=items.filter(p=>poQtys[p.sku]!=null).length;document.getElementById('pu').textContent=units.toLocaleString();}
+function chQty(sku,v,items){poQtys[sku]=Math.max(0,parseInt(v)||0);renderPO(items);}
+function rmItem(sku,items){poQtys[sku]=null;renderPO(items.filter(p=>poQtys[p.sku]!=null));}
+function toggleMO(){moOn=!moOn;document.getElementById('mo-cb').className='mark-cb'+(moOn?' checked':'');}
+function doExport(){const act=products.filter(p=>sel.has(p.sku)&&poQtys[p.sku]);const u=act.reduce((a,p)=>a+poQtys[p.sku],0);const v=act.reduce((a,p)=>a+poQtys[p.sku]*p.cost,0);document.getElementById('ex-details').textContent=`${act.length} products · ${u.toLocaleString()} units · €${Math.round(v).toLocaleString()}`;document.getElementById('ex-mark').textContent=moOn?'✓ Items marked as "on order". Coverage updated.':'Items not yet marked as ordered.';closePanel('po-bg');document.getElementById('ex-bg').classList.add('open');}
+function closeExport(){document.getElementById('ex-bg').classList.remove('open');showToast('Purchase order exported','success');}
+
+function openProdDetail(sku, e) {
+  if(e) e.stopPropagation();
+  const p = products.find(x => x.sku === sku);
+  if (!p) return;
+
+  document.getElementById('rpd-name').textContent = p.name;
+  document.getElementById('rpd-ean').textContent  = p.brand + ' · ' + p.ean;
+  document.getElementById('rpd-stock').textContent = p.stock + ' units';
+  document.getElementById('rpd-daily').textContent = p.daily + '/day';
+
+  const daysEl = document.getElementById('rpd-days');
+  daysEl.textContent = p.days + 'd';
+  daysEl.style.color = p.urg==='critical'?'var(--destructive)':p.urg==='warning'?'#b45309':'var(--success)';
+
+  const riskEl = document.getElementById('rpd-risk');
+  riskEl.textContent = p.risk > 0 ? '€' + p.risk.toLocaleString() : '€0';
+  riskEl.style.color = p.urg==='critical'?'var(--destructive)':p.urg==='warning'?'#b45309':'var(--foreground)';
+
+  const imgWrap = document.getElementById('rpd-img-wrap');
+  const init = p.name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  imgWrap.innerHTML = `<img src="${p.imgUrl}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\"display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:11px;font-weight:600;color:var(--zinc-400)\">${init}</span>'">`;
+
+  document.getElementById('rpd-rec').innerHTML = p.sugQty > 0
+    ? `Order <strong>${p.sugQty.toLocaleString()} units</strong> → 60 days + 7d buffer`
+    : 'No reorder needed — sufficient stock';
+
+  openPanel('reorder-prod-panel');
+
+  // Render mini chart after drawer opens
+  setTimeout(() => {
+    if (window._rpdChart) window._rpdChart.destroy();
+    const ctx = document.getElementById('rpd-chart').getContext('2d');
+    const labs = [...Array(14)].map((_, i) => i === 13 ? 'Today' : `-${13 - i}`);
+    const sales = labs.map(() => Math.max(1, p.daily + Math.round((Math.random() - .5) * 4)));
+    let cur = p.stock + p.daily * 13;
+    const stock = sales.map(v => { const r = Math.round(cur); cur -= v; return Math.max(0, r); });
+    window._rpdChart = new Chart(ctx, {
+      data: {
+        labels: labs,
+        datasets: [
+          {
+            type: 'bar', data: sales, yAxisID: 'y',
+            backgroundColor: 'rgba(35,22,65,.35)', borderRadius: 3,
+            label: 'Daily sales'
+          },
+          {
+            type: 'line', data: stock, yAxisID: 'y2',
+            borderColor: 'var(--destructive)', borderWidth: 1.8,
+            pointRadius: 0, fill: false, tension: .35,
+            label: 'Stock'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#fff', borderColor: '#e4e4e7', borderWidth: 1,
+            titleColor: '#18181b', bodyColor: '#71717a', padding: 10
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#a1a1aa' } },
+          y:  { display: false },
+          y2: { display: false }
+        }
+      }
+    });
+  }, 160);
+}
+
+renderTable();
+(function(){const brand=new URLSearchParams(window.location.search).get('brand');if(!brand)return;const s=document.getElementById('brand-filter');for(let i=0;i<s.options.length;i++)if(s.options[i].text===brand){s.selectedIndex=i;break;}const pill=document.createElement('div');pill.style.cssText='padding:4px 12px;font-size:12px;font-weight:500;border-radius:999px;background:var(--foreground);color:var(--card);display:inline-flex;align-items:center;gap:6px';pill.innerHTML=brand+'<span style="cursor:pointer;opacity:.7" onclick="this.parentElement.remove();document.getElementById(\'brand-filter\').selectedIndex=0;renderTable()">×</span>';document.getElementById('filter-chips').after(pill);renderTable();})();
+</script>
+
+<!-- Product detail drawer (from reorder table) -->
+<div class="drawer-backdrop" id="reorder-prod-panel" onclick="if(event.target.id==='reorder-prod-panel')closePanel('reorder-prod-panel')">
+  <div class="drawer">
+    <div class="drawer-head">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <div id="rpd-img-wrap" style="width:44px;height:44px;border-radius:8px;overflow:hidden;background:var(--zinc-100);border:1px solid var(--zinc-200);flex-shrink:0"></div>
+          <div>
+            <div class="drawer-title" id="rpd-name">—</div>
+            <div class="drawer-sub" id="rpd-ean">—</div>
+          </div>
+        </div>
+      </div>
+      <button class="close-x" onclick="closePanel('reorder-prod-panel')">✕</button>
+    </div>
+    <div class="drawer-body">
+      <div class="dm-grid">
+        <div class="dm"><div class="dm-lbl">Stock</div><div class="dm-val" id="rpd-stock">—</div></div>
+        <div class="dm"><div class="dm-lbl">Reorder in</div><div class="dm-val" id="rpd-days">—</div></div>
+        <div class="dm"><div class="dm-lbl">Daily sales</div><div class="dm-val" id="rpd-daily">—</div></div>
+        <div class="dm"><div class="dm-lbl">Revenue risk</div><div class="dm-val" id="rpd-risk">—</div></div>
+      </div>
+      <div style="margin-top:16px;margin-bottom:4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted-foreground)">14-day sales vs stock</div>
+      <canvas id="rpd-chart" height="130"></canvas>
+      <div style="margin-top:14px;padding:12px 14px;background:var(--primary-muted);border:1px solid var(--primary-border);border-radius:var(--radius-lg)">
+        <div style="font-size:11px;font-weight:600;color:var(--primary);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Recommendation</div>
+        <div style="font-size:14px;color:var(--foreground)" id="rpd-rec">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+function addSingleToCart(sku, e) {
+  if (e) e.stopPropagation();
+  const p = products.find(x => x.sku === sku);
+  if (!p) return;
+  const btn = e && e.currentTarget;
+
+  // If already added → just open cart
+  if (btn && btn.dataset.added === '1') {
+    cartOpen();
+    return;
+  }
+
+  cartAdd({
+    sku: p.sku,
+    name: p.name,
+    brand: p.brand,
+    qty: p.sugQty || 0,
+    imgUrl: p.imgUrl,
+  });
+
+  showToast(`${p.name} added to order`, 'success');
+  if (btn) {
+    btn.dataset.added = '1';
+    btn.textContent = 'Added to order';
+    btn.style.background = 'var(--zinc-100)';
+    btn.style.borderColor = 'var(--zinc-300)';
+    btn.style.color = 'var(--zinc-500)';
+    btn.style.fontWeight = '500';
+    btn.title = 'Click to view your order';
+  }
+}
+
+function addSelectionToCart() {
+  const sp = products.filter(p => sel.has(p.sku));
+  if (!sp.length) { showToast('Select at least one product first'); return; }
+  sp.forEach(p => {
+    cartAdd({
+      sku: p.sku,
+      name: p.name,
+      brand: p.brand,
+      qty: p.sugQty || 0,
+      imgUrl: p.imgUrl,
+    });
+  });
+  sel.clear();
+  document.querySelectorAll('.row-check:checked').forEach(cb => cb.checked = false);
+  document.querySelectorAll('tr.row-selected').forEach(tr => tr.classList.remove('row-selected'));
+  if (typeof updateSticky === 'function') updateSticky();
+  cartOpen();
+}
+</script>
+</body>
+</html>

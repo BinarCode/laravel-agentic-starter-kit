@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Restock — Orders</title>
+<link rel="stylesheet" href="css/app.css"/>
+<script src="js/topnav.js"></script>
+<script src="js/cart.js"></script>
+<style>
+.tab-bar{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:24px}
+.tab-item{padding:11px 20px;font-size:14px;font-weight:500;color:var(--muted-foreground);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .1s;letter-spacing:-0.01em}
+.tab-item:hover{color:var(--foreground)}
+.tab-item.active{color:var(--foreground);border-bottom-color:var(--foreground)}
+
+/* Step pill */
+.step-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:3px 10px;border-radius:999px;border:1px solid var(--border);background:var(--muted);color:var(--muted-foreground)}
+.step-pill-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* PO row table */
+.po-tbl{width:100%;border-collapse:collapse}
+.po-tbl thead tr{background:var(--muted);border-bottom:1px solid var(--border)}
+.po-tbl th{padding:10px 16px;text-align:left;font-size:12px;font-weight:500;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.po-tbl tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .08s}
+.po-tbl tbody tr:last-child{border-bottom:none}
+.po-tbl tbody tr:hover{background:var(--muted)}
+.po-tbl td{padding:15px 16px;vertical-align:middle;font-size:14px}
+
+/* Risk bar inline */
+.risk-inline{display:flex;align-items:center;gap:8px}
+.risk-bar-wrap{width:60px;height:5px;background:var(--zinc-200);border-radius:999px;overflow:hidden;flex-shrink:0}
+.risk-bar-fill{height:100%;border-radius:999px}
+
+/* History table */
+.po-hist{width:100%;border-collapse:collapse;font-size:14px}
+.po-hist thead tr{background:var(--muted);border-bottom:1px solid var(--border)}
+.po-hist th{padding:10px 16px;text-align:left;font-size:12px;font-weight:500;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.05em}
+.po-hist td{padding:13px 16px;border-bottom:1px solid var(--border)}
+.po-hist tr:last-child td{border-bottom:none}
+.po-hist tbody tr{cursor:pointer}
+.po-hist tbody tr:hover{background:var(--muted)}
+</style>
+</head>
+<body>
+<div id="nav-mount"></div>
+<div class="page">
+
+  <div class="page-hd">
+    <div>
+      <div class="page-title">Orders</div>
+      <div class="page-desc">4 active orders · 2 awaiting confirmation · 2 in transit</div>
+    </div>
+  </div>
+
+  <!-- 4 stat cards — same style as brand-detail -->
+  <div class="stat-row brand-stat" style="margin-bottom:28px;grid-template-columns:repeat(3,minmax(0,1fr))">
+
+    <div class="stat-card">
+      <div class="stat-card-top">
+        <span class="stat-card-label">Awaiting confirmation</span>
+        <div class="stat-icon warning">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2.5" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="stat-value">2</div>
+      <div class="stat-footnote">Upload invoice to confirm</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card-top">
+        <span class="stat-card-label">In transit</span>
+        <div class="stat-icon info">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 10h14M11 5l6 5-6 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+      <div class="stat-value">2</div>
+      <div class="stat-footnote">1 at risk of stockout</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card-top">
+        <span class="stat-card-label">Received (30d)</span>
+        <div class="stat-icon" style="background:var(--success-bg);color:var(--success)">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 10l4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+      <div class="stat-value" style="color:var(--success-fg)">4</div>
+      <div class="stat-footnote">Orders completed this month</div>
+    </div>
+
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <div class="tab-item active" onclick="showTab('active',this)">Active orders (4)</div>
+    <div class="tab-item" onclick="showTab('history',this)">History</div>
+  </div>
+
+  <!-- ACTIVE — clean table -->
+  <div id="tab-active">
+    <div class="tbl-wrap">
+      <div style="overflow-x:auto">
+        <table class="po-tbl">
+          <thead><tr>
+            <th>Order</th>
+            <th>Step</th>
+            <th>Products</th>
+            <th>Total units</th>
+            <th>Est. arrival</th>
+            <th>Action</th>
+            <th></th>
+          </tr></thead>
+          <tbody>
+
+            <!-- Awaiting confirmation -->
+            <tr onclick="location='po-detail.html'">
+              <td>
+                <div style="font-size:15px;font-weight:700;letter-spacing:-0.02em">PO-2024-018</div>
+                <div style="font-size:14px;color:var(--muted-foreground);margin-top:2px">Ordered 10 Mar 2024</div>
+              </td>
+              <td>
+                <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;white-space:nowrap;
+                  color:var(--warning-fg);background:var(--warning-bg);border:1px solid var(--warning-border);
+                  padding:4px 10px;border-radius:6px">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;display:inline-block"></span>
+                  Step 2 · Awaiting confirmation
+                </span>
+              </td>
+              <td style="font-weight:600">12</td>
+              <td style="font-weight:600">6,200</td>
+              <td style="color:var(--muted-foreground)">2–10 Apr</td>
+              <td><a href="po-detail.html" onclick="event.stopPropagation()" class="btn btn-default btn-sm" style="font-weight:600">Upload invoice →</a></td>
+              <td><a href="po-detail.html" onclick="event.stopPropagation()" class="btn btn-ghost btn-sm">Details →</a></td>
+            </tr>
+
+            <tr onclick="location='po-detail.html'">
+              <td>
+                <div style="font-size:15px;font-weight:700;letter-spacing:-0.02em">PO-2024-019</div>
+                <div style="font-size:14px;color:var(--muted-foreground);margin-top:2px">Ordered 14 Mar 2024</div>
+              </td>
+              <td>
+                <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;white-space:nowrap;
+                  color:var(--warning-fg);background:var(--warning-bg);border:1px solid var(--warning-border);
+                  padding:4px 10px;border-radius:6px">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;display:inline-block"></span>
+                  Step 2 · Awaiting confirmation
+                </span>
+              </td>
+              <td style="font-weight:600">6</td>
+              <td style="font-weight:600">2,400</td>
+              <td style="color:var(--muted-foreground)">8–16 Apr</td>
+              <td><a href="po-detail.html" onclick="event.stopPropagation()" class="btn btn-default btn-sm" style="font-weight:600">Upload invoice →</a></td>
+              <td><a href="po-detail.html" onclick="event.stopPropagation()" class="btn btn-ghost btn-sm">Details →</a></td>
+            </tr>
+
+            <!-- In transit — at risk -->
+            <tr onclick="location='po-detail-transit.html'">
+              <td>
+                <div style="font-size:15px;font-weight:700;letter-spacing:-0.02em">PO-2024-016</div>
+                <div style="font-size:14px;color:var(--muted-foreground);margin-top:2px">Ordered 1 Mar 2024</div>
+              </td>
+              <td>
+                <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;white-space:nowrap;
+                  color:var(--info-fg);background:var(--info-bg);border:1px solid var(--info-border);
+                  padding:4px 10px;border-radius:6px">
+                  <span style="width:8px;height:8px;border-radius:50%;background:var(--info);flex-shrink:0;display:inline-block"></span>
+                  Step 3 · In transit
+                </span>
+              </td>
+              <td style="font-weight:600">5</td>
+              <td style="font-weight:600">3,500</td>
+              <td style="color:var(--muted-foreground)">~6 Apr</td>
+              <td><a href="po-detail-transit.html" onclick="event.stopPropagation()" class="btn btn-default btn-sm" style="white-space:nowrap;font-weight:600">Mark as received →</a></td>
+              <td><a href="po-detail-transit.html" onclick="event.stopPropagation()" class="btn btn-ghost btn-sm">Details →</a></td>
+            </tr>
+
+            <!-- In transit — on track -->
+            <tr onclick="location='po-detail-transit.html'">
+              <td>
+                <div style="font-size:15px;font-weight:700;letter-spacing:-0.02em">PO-2024-017</div>
+                <div style="font-size:14px;color:var(--muted-foreground);margin-top:2px">Ordered 8 Mar 2024</div>
+              </td>
+              <td>
+                <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;white-space:nowrap;
+                  color:var(--info-fg);background:var(--info-bg);border:1px solid var(--info-border);
+                  padding:4px 10px;border-radius:6px">
+                  <span style="width:8px;height:8px;border-radius:50%;background:var(--info);flex-shrink:0;display:inline-block"></span>
+                  Step 3 · In transit
+                </span>
+              </td>
+              <td style="font-weight:600">3</td>
+              <td style="font-weight:600">1,800</td>
+              <td style="color:var(--muted-foreground)">~29 Mar</td>
+              <td><a href="po-detail-transit.html" onclick="event.stopPropagation()" class="btn btn-default btn-sm" style="white-space:nowrap;font-weight:600">Mark as received →</a></td>
+              <td><a href="po-detail-transit.html" onclick="event.stopPropagation()" class="btn btn-ghost btn-sm">Details →</a></td>
+            </tr>
+
+
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:11px 16px;background:var(--muted);border-top:1px solid var(--border);font-size:12px;color:var(--muted-foreground)">
+        4 active orders · click any row to open details
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY tab -->
+  <div id="tab-history" style="display:none">
+    <div class="tbl-wrap">
+      <div style="overflow-x:auto">
+        <table class="po-hist">
+          <thead><tr>
+            <th>Order Number</th>
+            <th>Ordered</th>
+            <th>Est. Arrival</th>
+            <th>Lead time</th>
+            <th>Products</th>
+            <th>Status</th>
+            <th></th>
+          </tr></thead>
+          <tbody>
+            <tr onclick="location='po-detail-received.html'">
+              <td><strong>PO-2024-011</strong><br><span style="font-size:14px;color:var(--muted-foreground)">5 products · 2,100 units</span></td>
+              <td style="color:var(--muted-foreground)">12 Jan 2024</td>
+              <td style="color:var(--muted-foreground)">3 Feb 2024</td>
+              <td style="color:var(--muted-foreground)">22 days</td>
+              <td style="color:var(--muted-foreground)">5 EANs</td>
+              <td><span class="badge badge-green">Received</span></td>
+              <td><a href="po-detail-received.html" onclick="event.stopPropagation()" class="btn btn-ghost btn-sm">Detail →</a></td>
+            </tr>
+            <tr onclick="location='po-detail-received.html'">
+              <td><strong>PO-2024-009</strong><br><span style="font-size:14px;color:var(--muted-foreground)">3 products · 1,400 units</span></td>
+              <td style="color:var(--muted-foreground)">5 Jan 2024</td>
+              <td style="color:var(--muted-foreground)">27 Jan 2024</td>
+              <td style="color:var(--muted-foreground)">22 days</td>
+              <td style="color:var(--muted-foreground)">3 EANs</td>
+              <td><span class="badge badge-green">Received</span></td>
+              <td><a href="po-detail-received.html" onclick="event.stopPropagation()" class="btn btn-ghost btn-sm">Detail →</a></td>
+            </tr>
+            <tr onclick="location='po-detail-received.html'">
+              <td><strong>PO-2023-047</strong><br><span style="font-size:14px;color:var(--muted-foreground)">4 products · 1,800 units</span></td>
+              <td style="color:var(--muted-foreground)">18 Nov 2023</td>
+              <td style="color:var(--muted-foreground)">15 Dec 2023</td>
+              <td style="color:var(--warning-fg);font-weight:500">27 days</td>
+              <td style="color:var(--muted-foreground)">4 EANs</td>
+              <td><span class="badge badge-amber">Late</span></td>
+              <td><a href="po-detail-received.html" onclick="event.stopPropagation()" class="btn btn-ghost btn-sm">Detail →</a></td>
+            </tr>
+            <tr onclick="location='po-detail-received.html'">
+              <td><strong>PO-2023-031</strong><br><span style="font-size:14px;color:var(--muted-foreground)">4 products · 1,600 units</span></td>
+              <td style="color:var(--muted-foreground)">5 Sep 2023</td>
+              <td style="color:var(--muted-foreground)">26 Sep 2023</td>
+              <td style="color:var(--muted-foreground)">21 days</td>
+              <td style="color:var(--muted-foreground)">4 EANs</td>
+              <td><span class="badge badge-green">Received</span></td>
+              <td><a href="po-detail-received.html" onclick="event.stopPropagation()" class="btn btn-ghost btn-sm">Detail →</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+function showTab(id,el){
+  ['active','history'].forEach(t=>document.getElementById('tab-'+t).style.display=t===id?'block':'none');
+  document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

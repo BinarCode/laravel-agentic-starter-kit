@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Restock — PO-2024-016</title>
+<link rel="stylesheet" href="css/app.css"/>
+<script src="js/topnav.js"></script>
+<script src="js/cart.js"></script>
+<style>
+.step-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-xl);padding:24px 26px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;transition:all .2s;position:relative;overflow:hidden}
+.step-card.active{background:var(--primary-muted);border-color:var(--primary-border)}
+.step-card.step-done{border-color:var(--success-border);background:var(--success-bg)}
+.step-big-num{font-size:52px;font-weight:800;letter-spacing:-0.05em;line-height:1;margin-bottom:12px;opacity:.15}
+.step-card.active .step-big-num{opacity:.25;color:var(--primary)}
+.step-card.step-done .step-big-num{opacity:.2;color:var(--success-fg)}
+.prod-status{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:3px 10px;border-radius:6px;border:1.5px solid}
+.prod-status.confirmed{color:#1a5c38;background:#dcfce7;border-color:#86efac}
+.prod-status.removed{color:var(--destructive-fg);background:var(--destructive-bg);border-color:var(--destructive-border)}
+.po-summary{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;background:var(--card);box-shadow:var(--shadow-sm);margin-bottom:24px}
+.po-sum-item{flex:1;padding:16px 20px;border-right:1px solid var(--border)}
+.po-sum-item:last-child{border-right:none}
+.po-sum-label{font-size:12px;font-weight:600;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.po-sum-val{font-size:22px;font-weight:700;letter-spacing:-0.03em;line-height:1}
+</style>
+</head>
+<body>
+<div id="nav-mount"></div>
+<div class="page">
+
+  <div class="page-hd">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <a href="orders.html" style="font-size:12px;color:var(--muted-foreground);text-decoration:none">← Orders</a>
+        <span style="color:var(--zinc-300)">/</span>
+        <span style="font-size:12px;color:var(--muted-foreground)">PO-2024-016</span>
+      </div>
+      <div class="page-title" style="display:flex;align-items:center;gap:12px">
+        PO-2024-016
+        <span class="badge badge-blue" style="font-size:14px">In transit</span>
+      </div>
+      <div class="page-desc">Medicube · Ordered 1 Mar 2024</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="showToast('Exporting PO…')">Export Excel</button>
+  </div>
+
+  <!-- 3 step cards — step 3 active -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:32px">
+
+    <div class="step-card step-done">
+      <div class="step-big-num">1</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:17px;font-weight:700;letter-spacing:-0.025em;color:var(--success-fg)">Draft</div>
+        <span class="badge badge-green">Done ✓</span>
+      </div>
+      <div style="font-size:14px;color:var(--muted-foreground);line-height:1.6">Products selected, quantities set, and order exported as Excel and sent to supplier.</div>
+    </div>
+
+    <div class="step-card step-done">
+      <div class="step-big-num">2</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:17px;font-weight:700;letter-spacing:-0.025em;color:var(--success-fg)">Awaiting confirmation</div>
+        <span class="badge badge-green">Done ✓</span>
+      </div>
+      <div style="font-size:14px;color:var(--muted-foreground);line-height:1.6">invoice uploaded. AI confirmed 5 products. Order confirmed on 2 Mar 2024.</div>
+    </div>
+
+    <div class="step-card active">
+      <div class="step-big-num" style="opacity:.25;color:var(--primary)">3</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:17px;font-weight:700;letter-spacing:-0.025em;color:var(--primary)">In transit</div>
+        <span class="badge badge-purple">In progress</span>
+      </div>
+      <div style="font-size:14px;color:var(--muted-foreground);line-height:1.6">Your order is on its way. Estimated arrival <strong>2–6 Apr 2024</strong>. Mark as received once the shipment arrives at your warehouse.</div>
+      <div style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:500;margin-bottom:6px">
+          <span style="color:var(--destructive-fg)">⚠ Stock: 9 days remaining</span>
+          <span style="color:var(--muted-foreground)">Arrives in ~27 days</span>
+        </div>
+        <div style="height:6px;background:var(--zinc-200);border-radius:999px;overflow:hidden">
+          <div style="width:25%;height:100%;background:var(--destructive);border-radius:999px"></div>
+        </div>
+        <div style="font-size:12px;color:var(--destructive-fg);margin-top:6px;font-weight:500">Stock runs out ~18 days before arrival.</div>
+      </div>
+      <button class="btn btn-default" style="margin-top:16px" onclick="markReceived()">Mark as order received →</button>
+    </div>
+
+  </div>
+
+  <!-- Summary -->
+  <div class="po-summary">
+    <div class="po-sum-item">
+      <div class="po-sum-label">Total products</div>
+      <div class="po-sum-val">5</div>
+      <div style="font-size:14px;color:var(--muted-foreground);margin-top:4px">Confirmed EANs</div>
+    </div>
+    <div class="po-sum-item">
+      <div class="po-sum-label">Total quantity</div>
+      <div class="po-sum-val">3,500</div>
+      <div style="font-size:14px;color:var(--muted-foreground);margin-top:4px">Confirmed units</div>
+    </div>
+    <div class="po-sum-item">
+      <div class="po-sum-label">Est. arrival</div>
+      <div class="po-sum-val" style="font-size:16px;padding-top:3px">2–6 Apr</div>
+      <div style="font-size:14px;color:var(--muted-foreground);margin-top:4px">27 day lead time</div>
+    </div>
+    <div class="po-sum-item">
+      <div class="po-sum-label">Status</div>
+      <div style="margin-top:6px"><span class="badge badge-blue" style="font-size:14px">In transit</span></div>
+      <div style="font-size:14px;color:var(--muted-foreground);margin-top:4px">Shipped 3 Mar 2024</div>
+    </div>
+  </div>
+
+  <!-- Products table -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div class="section-title">Confirmed products</div>
+    <span style="font-size:12px;color:var(--muted-foreground)">5 confirmed · 0 unavailable</span>
+  </div>
+  <div class="tbl-wrap">
+    <div style="overflow-x:auto">
+      <table class="data-tbl">
+        <thead><tr>
+          <th style="width:78px"></th>
+          <th>Product</th>
+          <th>EAN</th>
+          <th>Qty confirmed</th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody id="po-tbody"></tbody>
+      </table>
+    </div>
+    <div style="padding:11px 16px;background:var(--muted);border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--muted-foreground)">5 confirmed products</span>
+    </div>
+  </div>
+
+</div>
+<script>
+const items = [
+  {ean:'8809648920014',name:'PDRN Cream',       qty:1200,imgUrl:'https://media.ulta.com/i/ulta/2645368?w=80&h=80&fmt=auto'},
+  {ean:'8809648920021',name:'Collagen Mask',     qty:800, imgUrl:'https://media.ulta.com/i/ulta/2645369?w=80&h=80&fmt=auto'},
+  {ean:'8809648920038',name:'Deep Vita C Serum', qty:600, imgUrl:'https://media.ulta.com/i/ulta/2645352?w=80&h=80&fmt=auto'},
+  {ean:'8809648920069',name:'Red Erasing Serum', qty:500, imgUrl:'https://media.ulta.com/i/ulta/2645357?w=80&h=80&fmt=auto'},
+  {ean:'8809648920076',name:'Zero Pore Pad',     qty:320, imgUrl:'https://media.ulta.com/i/ulta/2645351?w=80&h=80&fmt=auto'},
+];
+const tb = document.getElementById('po-tbody');
+items.forEach(p => {
+  const init = p.name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="padding:6px 10px">
+      <div style="width:64px;height:64px;border-radius:10px;overflow:hidden;background:var(--zinc-100);border:1px solid var(--zinc-200)">
+        <img src="${p.imgUrl}" style="width:100%;height:100%;object-fit:cover" loading="lazy"
+          onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\\"display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:11px;font-weight:600;color:var(--zinc-400)\\">${init}</span>'">
+      </div>
+    </td>
+    <td><strong style="font-size:14px;font-weight:600;letter-spacing:-0.02em">${p.name}</strong><div style="font-size:11px;color:var(--muted-foreground);margin-top:1px">Medicube</div></td>
+    <td style="font-size:14px;color:var(--muted-foreground)">${p.ean}</td>
+    <td style="font-weight:600">${p.qty.toLocaleString()}</td>
+    <td><span class="prod-status" style="color:var(--info-fg);background:var(--info-bg);border-color:var(--info-border)"><svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2.5" stroke-linecap="round"/></svg>In transit</span></td>`;
+  tb.appendChild(tr);
+});
+
+function markReceived() {
+  // Update step 3 card to Done
+  const cards = document.querySelectorAll('.step-card');
+  cards[2].classList.remove('active');
+  cards[2].classList.add('step-done');
+  const title = cards[2].querySelector('[style*="font-size:17px"]');
+  if (title) { title.textContent = 'In transit'; title.style.color = 'var(--success-fg)'; }
+  const badge = cards[2].querySelector('.badge');
+  if (badge) { badge.textContent = 'Done ✓'; badge.className = 'badge badge-green'; }
+
+  // Show received confirmation panel
+  document.getElementById('received-panel').classList.add('open');
+}
+</script>
+
+<!-- Received confirmation panel -->
+<div class="overlay-backdrop" id="received-panel">
+  <div class="overlay-panel">
+    <div class="op-section" style="display:flex;justify-content:space-between;align-items:center">
+      <div class="op-title">Order received</div>
+      <button class="close-x" onclick="closeReceivedPanel()">✕</button>
+    </div>
+    <div class="op-scroll" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:320px;padding:40px 24px;text-align:center">
+      <div style="width:60px;height:60px;border-radius:50%;background:var(--success-bg);border:1px solid var(--success-border);margin-bottom:20px;display:flex;align-items:center;justify-content:center;font-size:28px">✓</div>
+      <div style="font-size:18px;font-weight:700;letter-spacing:-0.025em;margin-bottom:8px">Order marked as received</div>
+      <div style="font-size:14px;color:var(--muted-foreground);line-height:1.65;margin-bottom:20px">5 products · 3,500 units received on 17 Mar 2024</div>
+      <div id="stock-update-msg" style="font-size:14px;font-weight:500;line-height:1.6;padding:14px 18px;border-radius:var(--radius-lg);border:1px solid var(--success-border);background:var(--success-bg);color:var(--success-fg);width:100%;text-align:left;box-sizing:border-box">
+        ✓ A stock update request has been sent to WooCommerce. The quantities for all received products will be reflected on your store shortly.
+      </div>
+    </div>
+    <div class="op-footer">
+      <button class="btn btn-default" style="width:100%" onclick="closeReceivedPanel()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function closeReceivedPanel() {
+  document.getElementById('received-panel').classList.remove('open');
+  document.querySelector('.step-card:nth-child(3) button').textContent = 'Received ✓';
+  document.querySelector('.step-card:nth-child(3) button').disabled = true;
+  document.querySelector('.step-card:nth-child(3) button').style.opacity = '.5';
+}
+</script>
+</body>
+</html>

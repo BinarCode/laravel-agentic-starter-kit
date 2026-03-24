@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Restock — Dashboard</title>
+<link rel="stylesheet" href="css/app.css"/>
+<script src="js/topnav.js"></script>
+<script src="js/cart.js"></script>
+<style>
+
+/* ── Score inline ─────────────────────────────────────────────────────── */
+.score-inline {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 8px 16px 8px 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+  cursor: default; flex-shrink: 0;
+}
+.score-ring-mini  { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
+.score-ring-mini svg { transform: rotate(-90deg); }
+.score-center-mini {
+  position: absolute; inset: 0; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; letter-spacing: -0.03em;
+}
+
+/* ── Alert banner ─────────────────────────────────────────────────────── */
+.alert-banner {
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 22px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-left: 4px solid var(--destructive);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+}
+.alert-icon {
+  width: 38px; height: 38px; border-radius: 9px;
+  background: var(--destructive-bg); color: var(--destructive);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.alert-title {
+  font-size: 17px; font-weight: 700;
+  letter-spacing: -0.025em; color: var(--foreground);
+  line-height: 1.2;
+}
+.alert-sub {
+  font-size: 14px; color: var(--muted-foreground);
+  margin-top: 4px; line-height: 1.4;
+}
+
+/* ── Two-column layout ────────────────────────────────────────────────── */
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ── 4 KPI cards: 2×2 grid that fills the left column height ─────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  height: 100%;
+}
+.kpi-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.kpi-card-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.kpi-card-icon {
+  width: 36px; height: 36px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.kpi-card-icon svg { width: 17px; height: 17px; }
+.kpi-card-icon.d { background: var(--destructive-bg); color: var(--destructive); }
+.kpi-card-icon.w { background: var(--warning-bg);     color: var(--warning); }
+.kpi-card-icon.i { background: var(--info-bg);         color: var(--info); }
+.kpi-card-icon.g { background: var(--success-bg);      color: var(--success); }
+.kpi-card-label  {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--muted-foreground); margin-bottom: 12px;
+}
+.kpi-card-value  {
+  font-size: 34px; font-weight: 800; letter-spacing: -0.04em; line-height: 1;
+}
+.kpi-card-value.d { color: var(--destructive-fg); }
+.kpi-card-value.w { color: var(--warning-fg); }
+.kpi-card-value.g { color: var(--success-fg); }
+.kpi-card-footnote {
+  font-size: 14px; color: var(--muted-foreground); margin-top: 8px;
+}
+.kpi-card-footnote.up { color: var(--destructive-fg); }
+
+/* ── Arriving soon card ───────────────────────────────────────────────── */
+.info-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column;
+  height: 100%;
+}
+.info-card-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.info-card-title {
+  font-size: 15px; font-weight: 600; letter-spacing: -0.02em;
+  display: flex; align-items: center; gap: 8px;
+}
+.info-card-title svg { color: var(--muted-foreground); }
+.info-card-link {
+  font-size: 14px; color: var(--muted-foreground);
+  text-decoration: none; font-weight: 500;
+}
+.info-card-link:hover { color: var(--foreground); }
+
+.arrival-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  flex: 1;
+}
+.arrival-row:last-child { border-bottom: none; }
+
+.arrival-dot {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+}
+.arrival-dot.soon  { background: var(--success); box-shadow: 0 0 0 3px rgba(21,128,61,.15); }
+.arrival-dot.later { background: var(--zinc-300); }
+
+.arrival-name { font-size: 15.5px; font-weight: 600; letter-spacing: -0.02em; }
+.arrival-sub  { font-size: 13.5px; color: var(--muted-foreground); margin-top: 3px; }
+
+.arrival-eta { margin-left: auto; text-align: right; flex-shrink: 0; }
+.arrival-eta-date  { font-size: 15px; font-weight: 600; }
+.arrival-eta-date.soon  { color: var(--success-fg); }
+.arrival-eta-date.later { color: var(--muted-foreground); }
+.arrival-eta-days  { font-size: 12.5px; color: var(--muted-foreground); margin-top: 2px; }
+
+/* PO count badge in header */
+.po-badge {
+  font-size: 12.5px; font-weight: 700;
+  padding: 2px 8px; border-radius: 999px;
+  background: var(--info-bg); color: var(--info-fg);
+  border: 1px solid var(--info-border);
+}
+
+@media (max-width: 780px) {
+  .dash-grid { grid-template-columns: 1fr; }
+  .kpi-grid  { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
+}
+</style>
+</head>
+<body>
+<div id="nav-mount"></div>
+<div class="page">
+
+  <!-- ── Greeting + Score ───────────────────────────────────────────── -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:16px;flex-wrap:wrap">
+    <div>
+      <div class="page-title">Hey, Alex 👋</div>
+      <div class="page-desc">Monday, 16 March 2026</div>
+    </div>
+    <div class="score-inline" title="Inventory Health Score — complete your restock queue to improve">
+      <div class="score-ring-mini">
+        <svg width="44" height="44" viewBox="0 0 44 44">
+          <circle fill="none" stroke="var(--zinc-200)" stroke-width="5" cx="22" cy="22" r="16"/>
+          <circle fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"
+            cx="22" cy="22" r="16"
+            stroke-dasharray="100.5"
+            stroke-dashoffset="39"
+            id="score-ring-arc"
+            style="transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)"/>
+        </svg>
+        <div class="score-center-mini" id="score-num" style="color:#b45309">—</div>
+      </div>
+      <div>
+        <div style="font-size:14.5px;font-weight:600;letter-spacing:-0.015em">Health Score</div>
+        <div style="font-size:12.5px;color:var(--muted-foreground)" id="score-sub">— · Fair</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Alert banner ───────────────────────────────────────────────── -->
+  <div class="alert-banner">
+    <div class="alert-icon">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M8 2L1 14h14L8 2z" stroke-linejoin="round"/>
+        <path d="M8 6.5v3M8 11.5v.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div class="alert-title">28 products will run out of stock within 14 days</div>
+      <div class="alert-sub" style="color:var(--muted-foreground);font-size:14px">Act now to avoid stockouts and protect <strong style="color:var(--foreground)">€56,000</strong> in revenue</div>
+    </div>
+    <a href="reorder.html" class="btn btn-default" style="flex-shrink:0;font-size:13.5px">Open Reorder →</a>
+  </div>
+
+  <!-- ── Two-column: KPI cards left · Arriving soon right ──────────── -->
+  <div class="dash-grid">
+
+    <!-- Left: 2×2 KPI cards -->
+    <div class="kpi-grid">
+
+      <div class="kpi-card">
+        <div class="kpi-card-label">Potential loss</div>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between">
+          <div>
+            <div class="kpi-card-value d">€64k</div>
+            <div class="kpi-card-footnote" style="margin-top:8px">loss if you don't restock on time</div>
+          </div>
+          <div class="kpi-card-icon d">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M10 3L3 15h14L10 3z"/><path d="M10 9v3m0 2v.5" stroke-linecap="round"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <a href="reorder.html" class="kpi-card" style="text-decoration:none;cursor:pointer;transition:box-shadow .12s,transform .12s" onmouseover="this.style.boxShadow='var(--shadow-md)';this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+        <div class="kpi-card-label">Critical products</div>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between">
+          <div>
+            <div class="kpi-card-value d">28</div>
+            <div class="kpi-card-footnote">require immediate reorder</div>
+          </div>
+          <div class="kpi-card-icon d">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="4" width="14" height="13" rx="2"/><path d="M3 8.5h14M7 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+      </a>
+
+      <a href="brands.html" class="kpi-card" style="text-decoration:none;cursor:pointer;transition:box-shadow .12s,transform .12s" onmouseover="this.style.boxShadow='var(--shadow-md)';this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+        <div class="kpi-card-label">Brands at risk</div>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between">
+          <div>
+            <div class="kpi-card-value w">11</div>
+            <div class="kpi-card-footnote">of 25 active brands</div>
+          </div>
+          <div class="kpi-card-icon w">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M10 3l2 4.5H18l-4.5 3.3 1.7 5.2L10 14l-5.2 3 1.7-5.2L2 8.5h6L10 3z"/></svg>
+          </div>
+        </div>
+      </a>
+
+      <a href="orders.html" class="kpi-card" style="text-decoration:none;cursor:pointer;transition:box-shadow .12s,transform .12s" onmouseover="this.style.boxShadow='var(--shadow-md)';this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+        <div class="kpi-card-label">Orders in transit</div>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between">
+          <div>
+            <div class="kpi-card-value" style="color:var(--foreground)">2</div>
+            <div class="kpi-card-footnote">1 at risk of delay</div>
+          </div>
+          <div class="kpi-card-icon i">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="10" cy="10" r="7"/><path d="M10 3v1.5M10 15.5V17M3 10H4.5M15.5 10H17" stroke-linecap="round"/></svg>
+          </div>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Right: quick stats only now, orders moved below -->
+    <div class="info-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:160px;text-align:center;gap:6px">
+      <div style="font-size:14px;font-weight:500;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.06em">Active orders</div>
+      <div style="font-size:48px;font-weight:800;letter-spacing:-0.05em;line-height:1;color:var(--foreground)">4</div>
+      <div style="font-size:15px;font-weight:600;color:var(--warning-fg);margin-top:4px;letter-spacing:-0.01em">2 need attention</div>
+      <a href="orders.html" class="btn btn-outline btn-sm" style="margin-top:8px">View all orders →</a>
+    </div>
+
+  </div>
+
+
+</div>
+<script>
+(function() {
+  const SCORE = 58;
+  const circ  = 100.5;
+  const arc   = document.getElementById('score-ring-arc');
+  const numEl = document.getElementById('score-num');
+  const subEl = document.getElementById('score-sub');
+  subEl.textContent = SCORE + ' / 100 · Fair';
+  let start = null;
+  function tick(ts) {
+    if (!start) start = ts;
+    const p = Math.min((ts - start) / 1100, 1);
+    const e = 1 - Math.pow(1 - p, 3);
+    numEl.textContent = Math.round(SCORE * e);
+    arc.style.strokeDashoffset = circ - circ * (SCORE / 100) * e;
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Restock — Settings</title>
+<link rel="stylesheet" href="css/app.css"/>
+<script src="js/topnav.js"></script>
+<script src="js/cart.js"></script>
+<style>
+.settings-layout{display:grid;grid-template-columns:200px 1fr;gap:28px;align-items:start}
+.settings-nav{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:8px;box-shadow:var(--shadow-sm);position:sticky;top:88px}
+.settings-nav-item{padding:8px 12px;border-radius:var(--radius-lg);font-size:14px;font-weight:500;color:var(--muted-foreground);cursor:pointer;transition:all .1s;display:block;text-decoration:none;letter-spacing:-0.01em}
+.settings-nav-item:hover{background:var(--muted);color:var(--foreground)}
+.settings-nav-item.active{background:var(--zinc-100);color:var(--foreground);font-weight:600}
+@media(max-width:768px){.settings-layout{grid-template-columns:1fr}.settings-nav{position:static}}
+</style>
+</head>
+<body>
+<div id="nav-mount"></div>
+<div class="page">
+  <div class="page-hd" style="margin-bottom:24px">
+    <div><div class="page-title">Settings</div><div class="page-desc">Manage your account, integrations and preferences</div></div>
+  </div>
+
+  <div class="settings-layout">
+    <!-- Side nav -->
+    <div class="settings-nav">
+      <a class="settings-nav-item active" onclick="showSection('account',this)">Account</a>
+      <a class="settings-nav-item" onclick="showSection('reorder',this)">Reorder rules</a>
+      <a class="settings-nav-item" onclick="showSection('suppliers',this)">Suppliers</a>
+    </div>
+
+    <!-- Sections -->
+    <div>
+
+      <!-- ACCOUNT -->
+      <div id="s-account" style="display:block">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">Profile</div></div>
+          <div class="card-body">
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="form-group" style="margin-bottom:0"><label class="form-label">Full name</label><input class="form-input" value="Alex Popescu"/></div>
+              <div class="form-group" style="margin-bottom:0"><label class="form-label">Email</label><input class="form-input" value="alex@mystore.ro"/></div>
+            </div>
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="form-group" style="margin-bottom:0"><label class="form-label">Company</label><input class="form-input" value="K-Beauty RO SRL"/></div>
+              <div class="form-group" style="margin-bottom:0"><label class="form-label">Timezone</label><select class="form-input form-select"><option>Europe/Bucharest (GMT+2)</option></select></div>
+            </div>
+            <div class="form-row" style="margin-bottom:18px">
+              <div class="form-group" style="margin-bottom:0"><label class="form-label">Language</label><select class="form-input form-select" id="lang-select" onchange="changeLang(this.value)"><option value="en">English</option><option value="ro">Română</option><option value="de">Deutsch</option><option value="fr">Français</option><option value="es">Español</option><option value="nl">Nederlands</option><option value="pl">Polski</option><option value="hu">Magyar</option></select></div>
+              <div class="form-group" style="margin-bottom:0"><label class="form-label">Currency display</label><select class="form-input form-select"><option>EUR — Euro (€)</option><option>USD — Dollar ($)</option><option>GBP — Pound (£)</option><option>RON — Leu (lei)</option><option>PLN — Zloty (zł)</option></select></div>
+            </div>
+            <button class="btn btn-default" onclick="showToast('Profile saved','success')">Save changes</button>
+          </div>
+        </div>
+        <!-- Free Trial banner -->
+        <div class="card" style="border:1.5px solid var(--primary-border);background:linear-gradient(135deg,var(--primary-muted) 0%,var(--card) 60%)">
+          <div class="card-body">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                  <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--primary);background:var(--primary-muted);border:1px solid var(--primary-border);padding:2px 9px;border-radius:999px">Free Trial</span>
+                  <span style="font-size:14px;font-weight:600;color:var(--destructive)" id="trial-countdown">9 days left</span>
+                </div>
+                <div style="font-size:15px;font-weight:700;letter-spacing:-0.025em;color:var(--foreground);margin-bottom:4px">You're on a free trial</div>
+                <div style="font-size:14px;color:var(--muted-foreground);line-height:1.5">Full access to all features until <strong id="trial-end-date">26 March 2026</strong>. Upgrade anytime — no credit card required during trial.</div>
+                <!-- Progress bar -->
+                <div style="margin-top:14px">
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted-foreground);margin-bottom:5px">
+                    <span>Trial started 17 Mar</span><span id="trial-end-label">Ends 26 Mar</span>
+                  </div>
+                  <div style="height:5px;background:var(--zinc-200);border-radius:999px;overflow:hidden">
+                    <div style="height:100%;width:10%;background:var(--primary);border-radius:999px;transition:width .3s" id="trial-bar"></div>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
+                <button class="btn btn-default" style="white-space:nowrap" onclick="showToast('Opening upgrade page…')">Upgrade to Pro →</button>
+                <div style="font-size:11px;color:var(--muted-foreground);text-align:center">€49/mo · cancel anytime</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Connected store -->
+        <div class="card" style="margin-top:16px">
+          <div class="card-header">
+            <div class="card-title">Connected store</div>
+            <div class="card-desc">Your active data source for inventory and sales</div>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+              <div style="display:flex;align-items:center;gap:14px">
+                <div style="width:44px;height:44px;border-radius:10px;background:#f6f0ff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🔌</div>
+                <div>
+                  <div style="font-size:15px;font-weight:600;letter-spacing:-0.02em">WooCommerce</div>
+                  <div style="font-size:14px;color:var(--muted-foreground);margin-top:2px">store.mystore.ro</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:12px;font-weight:500;color:var(--success-fg);background:var(--success-bg);border:1px solid var(--success-border);padding:3px 12px;border-radius:999px;display:flex;align-items:center;gap:5px">
+                  <span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block"></span>Connected
+                </span>
+                <button class="btn btn-outline btn-sm" onclick="showToast('Reconnecting store…')">Reconnect</button>
+                <button class="btn btn-ghost btn-sm" style="color:var(--destructive)" onclick="showToast('Store disconnected')">Disconnect</button>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding:12px 16px;background:var(--muted);border-radius:var(--radius-lg);border:1px solid var(--border);display:flex;gap:24px;flex-wrap:wrap">
+              <div><div style="font-size:11px;font-weight:500;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Last sync</div><div style="font-size:14px;font-weight:500">4 min ago</div></div>
+              <div><div style="font-size:11px;font-weight:500;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Active EANs</div><div style="font-size:14px;font-weight:500">147</div></div>
+              <div><div style="font-size:11px;font-weight:500;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Sync mode</div><div style="font-size:14px;font-weight:500">Webhook + 5 min fallback</div></div>
+              <div><div style="font-size:11px;font-weight:500;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Platform</div><div style="font-size:14px;font-weight:500">WooCommerce 8.4</div></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- REORDER RULES -->
+      <div id="s-reorder" style="display:none">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Default reorder settings</div><div class="card-desc">Applied to all brands unless overridden per brand</div></div>
+          <div class="card-body">
+            <div class="form-row" style="margin-bottom:20px">
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Safety buffer (days)</label>
+                <input class="form-input" type="number" value="7" style="max-width:120px"/>
+                <div style="font-size:12px;color:var(--muted-foreground);margin-top:6px">Recommended: 3–4 days. Stock below this triggers a reorder alert.</div>
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Target coverage (days)</label>
+                <input class="form-input" type="number" value="60" style="max-width:120px"/>
+                <div style="font-size:12px;color:var(--muted-foreground);margin-top:6px">How many days of stock to maintain after a reorder.</div>
+              </div>
+            </div>
+            <button class="btn btn-default" onclick="showToast('Rules saved','success')">Save rules</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-header">
+            <div class="card-title">Lead time per brand</div>
+            <div class="card-desc">Override default lead time for each supplier · used to calculate reorder timing</div>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table class="data-tbl" id="lt-rows" style="width:100%"></table>
+          </div>
+          <div style="padding:16px 22px;border-top:1px solid var(--border)">
+            <button class="btn btn-default" onclick="saveLT()" style="font-weight:600">Save lead times</button>
+          </div>
+        </div>
+
+        <!-- When a PO is received -->
+        <div class="card" style="margin-top:16px">
+          <div class="card-header">
+            <div class="card-title">When a order is received</div>
+            <div class="card-desc">Choose what happens to your product stock when you mark an order as received</div>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:10px">
+
+              <label id="opt-woo" style="display:flex;align-items:flex-start;gap:14px;padding:16px 18px;border:2px solid var(--primary);border-radius:var(--radius-xl);cursor:pointer;background:var(--primary-muted);transition:all .15s">
+                <input type="radio" name="stock-source" value="woocommerce" checked onchange="updateStockUI()" style="margin-top:3px;accent-color:var(--primary);flex-shrink:0">
+                <div>
+                  <div style="font-size:14px;font-weight:600;letter-spacing:-0.01em;margin-bottom:4px">Update WooCommerce automatically</div>
+                  <div style="font-size:14px;color:var(--muted-foreground);line-height:1.6">When you mark an order as received, Restock will automatically send the updated stock quantities to your WooCommerce store. No extra steps needed on your end.</div>
+                </div>
+              </label>
+
+              <label id="opt-manual" style="display:flex;align-items:flex-start;gap:14px;padding:16px 18px;border:1.5px solid var(--border);border-radius:var(--radius-xl);cursor:pointer;background:var(--card);transition:all .15s">
+                <input type="radio" name="stock-source" value="manual" onchange="updateStockUI()" style="margin-top:3px;accent-color:var(--primary);flex-shrink:0">
+                <div>
+                  <div style="font-size:14px;font-weight:600;letter-spacing:-0.01em;margin-bottom:4px">I'll update stock manually</div>
+                  <div style="font-size:14px;color:var(--muted-foreground);line-height:1.6">When you mark an order as received, the stock quantities of those products will <strong>not</strong> be sent to your website automatically. You'll need to update them yourself.</div>
+                </div>
+              </label>
+
+            </div>
+            <button class="btn btn-default" style="margin-top:20px" onclick="saveStockSource()">Save preference</button>
+          </div>
+        </div>
+      </div>
+
+
+    
+
+      <!-- SUPPLIERS -->
+      <div id="s-suppliers" style="display:none">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <div class="card-title">Add new supplier</div>
+            <div class="card-desc">Add the suppliers you order from and assign which brands each one carries.</div>
+          </div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+              <div>
+                <label class="form-label">Supplier name</label>
+                <input id="new-sup-name" class="form-input" placeholder="e.g. Seoul Beauty Co." type="text" style="height:44px">
+              </div>
+              <div style="position:relative">
+                <label class="form-label">Brands carried by this supplier</label>
+                <div id="brand-checkboxes"
+                  style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:8px 12px;
+                         background:var(--card);display:flex;flex-wrap:wrap;gap:6px;min-height:44px;
+                         cursor:pointer;align-items:center"
+                  onclick="toggleBrandDropdown()">
+                  <span id="brand-placeholder" style="font-size:14px;color:var(--muted-foreground)">Choose brands…</span>
+                </div>
+                <!-- Brand dropdown -->
+                <div id="brand-dropdown"
+                  style="display:none;position:absolute;z-index:50;background:var(--card);
+                         border:1px solid var(--border);border-radius:var(--radius-xl);
+                         box-shadow:var(--shadow-lg);padding:8px;margin-top:4px;width:100%">
+                  <div style="font-size:12px;color:var(--muted-foreground);padding:4px 8px;margin-bottom:4px;font-weight:500">Click to add a brand</div>
+                  <div id="brand-dropdown-list" style="display:flex;flex-direction:column;gap:2px"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Order method -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+              <div>
+                <label class="form-label">Order method</label>
+                <select id="new-sup-method" class="form-input" style="height:44px;cursor:pointer" onchange="toggleNewEmailFields()">
+                  <option value="manual">Manual</option>
+                  <option value="email">Email</option>
+                </select>
+                <div id="new-method-desc" style="font-size:14px;color:var(--muted-foreground);margin-top:7px;line-height:1.55">You place the order yourself (by phone, portal, or any other way). When the supplier sends you the invoice, upload it in the order to confirm it. Once the goods arrive, mark the order as received.</div>
+              </div>
+              <div id="new-email-wrap" style="display:none">
+                <label class="form-label">Order email address(es)</label>
+                <input id="new-sup-emails" class="form-input" placeholder="orders@supplier.com, backup@supplier.com" style="height:44px">
+                <div style="font-size:14px;color:var(--muted-foreground);margin-top:7px">Separate multiple addresses with a comma</div>
+              </div>
+            </div>
+
+            <button class="btn btn-default" onclick="addSupplier()" style="font-weight:600">Add supplier</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">All suppliers</div></div>
+          <div class="card-body" style="padding:0">
+            <div style="overflow-x:auto">
+              <table class="data-tbl">
+                <thead><tr>
+                  <th style="width:40px">#</th>
+                  <th style="width:200px">Supplier name</th>
+                  <th>Brands assigned</th>
+                  <th style="width:130px">Order method</th>
+                  <th style="width:130px"></th>
+                </tr></thead>
+                <tbody id="supplier-table-body"></tbody>
+              </table>
+            </div>
+            <div style="padding:10px 16px;background:var(--muted);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:12px;color:var(--muted-foreground)" id="sup-count">0 suppliers</span>
+              <div style="display:flex;gap:6px" id="sup-pagination"></div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /s-suppliers -->
+</div>
+
+
+
+    </div><!-- /sections -->
+  </div><!-- /settings-layout -->
+</div><!-- /page -->
+<script>
+// Trial countdown
+(function() {
+  const trialStart = new Date('2026-03-17');
+  const trialDays  = 9;
+  const trialEnd   = new Date(trialStart);
+  trialEnd.setDate(trialEnd.getDate() + trialDays);
+
+  const now  = new Date();
+  const msLeft = trialEnd - now;
+  const daysLeft = Math.max(0, Math.ceil(msLeft / 86400000));
+  const pct  = Math.min(100, Math.round(((now - trialStart) / (trialEnd - trialStart)) * 100));
+
+  const fmt = d => d.toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const cd = document.getElementById('trial-countdown');
+    const bar = document.getElementById('trial-bar');
+    const endDate = document.getElementById('trial-end-date');
+    const endLabel = document.getElementById('trial-end-label');
+    if (cd) cd.textContent = daysLeft === 0 ? 'Expires today' : daysLeft + ' days left';
+    if (cd) cd.style.color = daysLeft <= 3 ? 'var(--destructive)' : 'var(--primary)';
+    if (bar) bar.style.width = pct + '%';
+    if (endDate) endDate.textContent = fmt(trialEnd);
+    if (endLabel) endLabel.textContent = 'Ends ' + fmt(trialEnd);
+  });
+})();
+
+function changeLang(lang) {
+  setLang(lang);
+  showToast(lang === 'ro' ? 'Limbă schimbată în Română' : 'Language changed to English', 'success');
+  setTimeout(() => location.reload(), 800);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('lang-select');
+  if (sel) sel.value = getCurrentLang();
+});
+function showSection(id,el){
+  // Hide all top-level sections
+  ['account','reorder','suppliers'].forEach(sid => {
+    const el2 = document.getElementById('s-'+sid);
+    if (el2) el2.style.display = 'none';
+  });
+  const target = document.getElementById('s-'+id);
+  if (target) target.style.display = 'block';
+  document.querySelectorAll('.settings-nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Integration toggles
+function toggleIntegration(btn, id) {
+  const on = btn.classList.toggle('on');
+  showToast(on ? id + ' enabled' : id + ' paused', on ? 'success' : '');
+}
+function connectPlatform(id) {
+  const map = {
+    baselinker: { badge:'bl-badge', btn:'bl-btn', sub:'bl-sub', label:'BaseLinker', url:'api.baselinker.com' },
+    amazon:     { badge:'amz-badge', btn:'amz-btn', sub:'amz-sub', label:'Amazon Seller', url:'sellercentral.amazon.eu' }
+  };
+  const m = map[id]; if (!m) return;
+  document.getElementById(m.badge).style.display = '';
+  const btn = document.getElementById(m.btn);
+  btn.outerHTML = `<button class="toggle on" onclick="toggleIntegration(this,'${id}')"></button>`;
+  document.getElementById(m.sub).textContent = m.url + ' · Just connected';
+  showToast(m.label + ' connected', 'success');
+}
+
+// Lead time per brand
+const ltBrands = [
+  { name:'Medicube',  lt:21 },
+  { name:'Anua',      lt:18 },
+  { name:'Round Lab', lt:24 },
+  { name:'Isntree',   lt:21 },
+  { name:'COSRX',     lt:20 },
+  { name:'Some By Mi',lt:22 },
+  { name:'Klairs',    lt:19 },
+  { name:"Dr. Jart+", lt:25 },
+];
+
+function renderLT() {
+  const wrap = document.getElementById('lt-rows');
+  if (!wrap) return;
+
+  let html = `<thead><tr>
+    <th style="width:60%">Brand</th>
+    <th style="width:40%">Lead time</th>
+  </tr></thead><tbody>`;
+
+  ltBrands.forEach((b, i) => {
+    html += `<tr>
+      <td>
+        <div style="font-size:15px;font-weight:600;letter-spacing:-0.02em">${b.name}</div>
+      </td>
+      <td style="padding:10px 16px">
+        <div style="display:inline-flex;align-items:center;gap:8px">
+          <input type="number" min="1" max="90" value="${b.lt}" id="lt-${i}"
+            class="form-input"
+            style="width:72px;font-size:15px;font-weight:600;text-align:center;padding:8px 10px"
+            onfocus="this.style.borderColor='var(--primary)'"
+            onblur="this.style.borderColor='var(--border)'"/>
+          <span style="font-size:14px;color:var(--muted-foreground)">days</span>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody>';
+  wrap.innerHTML = html;
+}
+
+function saveLT() {
+  ltBrands.forEach((b, i) => {
+    const ltEl = document.getElementById('lt-' + i);
+    if (ltEl) b.lt = parseInt(ltEl.value) || b.lt;
+  });
+  showToast('Lead times saved', 'success');
+}
+
+document.addEventListener('DOMContentLoaded', renderLT);
+
+function updateStockUI() {
+  const val = document.querySelector('input[name="stock-source"]:checked')?.value;
+  const woo = document.getElementById('opt-woo');
+  const man = document.getElementById('opt-manual');
+  if (!woo || !man) return;
+  if (val === 'woocommerce') {
+    woo.style.border = '2px solid var(--primary)'; woo.style.background = 'var(--primary-muted)';
+    man.style.border = '1.5px solid var(--border)'; man.style.background = 'var(--card)';
+  } else {
+    man.style.border = '2px solid var(--primary)'; man.style.background = 'var(--primary-muted)';
+    woo.style.border = '1.5px solid var(--border)'; woo.style.background = 'var(--card)';
+  }
+}
+function saveStockSource() {
+  const val = document.querySelector('input[name="stock-source"]:checked')?.value;
+  const label = val === 'woocommerce' ? 'WooCommerce' : 'Manual';
+  showToast('Stock source set to ' + label, 'success');
+}
+
+// ── Suppliers management ─────────────────────────────────────────
+const BRANDS_LIST = ['Medicube','Anua','Round Lab','Isntree','COSRX','Some By Mi','Klairs','Dr. Jart+'];
+
+function suppliersLoad() {
+  return JSON.parse(localStorage.getItem('restock_suppliers') || JSON.stringify(SUPPLIERS));
+}
+function suppliersSave(s) {
+  localStorage.setItem('restock_suppliers', JSON.stringify(s));
+}
+function brandSupplierLoad() {
+  return JSON.parse(localStorage.getItem('restock_brand_supplier') || JSON.stringify(BRAND_SUPPLIER));
+}
+function brandSupplierSave(m) {
+  localStorage.setItem('restock_brand_supplier', JSON.stringify(m));
+}
+
+const SUP_PER_PAGE = 10;
+let supPage = 1;
+
+let editingSupIdx = -1; // -1 = none editing
+
+function renderSupplierList() {
+  const sups = suppliersLoad();
+  const tbody = document.getElementById('supplier-table-body');
+  const countEl = document.getElementById('sup-count');
+  const pagEl = document.getElementById('sup-pagination');
+  if (!tbody) return;
+
+  const totalPages = Math.max(1, Math.ceil(sups.length / SUP_PER_PAGE));
+  supPage = Math.min(supPage, totalPages);
+  const slice = sups.slice((supPage-1)*SUP_PER_PAGE, supPage*SUP_PER_PAGE);
+  const mapping = typeof brandSupplierLoad === 'function' ? brandSupplierLoad() : {};
+  const BRANDS_LIST_LOCAL = ['Medicube','Anua','Round Lab','Isntree','COSRX','Some By Mi','Klairs','Dr. Jart+'];
+
+  tbody.innerHTML = slice.length ? slice.map((s, i) => {
+    const realIdx = (supPage-1)*SUP_PER_PAGE + i;
+    const assignedBrands = BRANDS_LIST_LOCAL.filter(b => mapping[b] === s.id);
+    const isEditing = editingSupIdx === realIdx;
+
+    if (isEditing) {
+      // Edit row — same layout as Add form
+      const editBrandPills = assignedBrands.map(b => `
+        <span class="edit-sel-pill" data-brand="${b}"
+          style="display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:500;
+                 padding:4px 8px 4px 12px;border-radius:999px;background:var(--primary-muted);
+                 border:1.5px solid var(--primary-border);color:var(--primary);line-height:1">
+          ${b}<button type="button"
+            onclick="event.stopPropagation();removeEditBrandChip('${b}')"
+            style="background:none;border:none;cursor:pointer;color:var(--primary);font-size:14px;line-height:1;padding:0;margin-left:2px;opacity:.7;display:flex;align-items:center"
+            onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">×</button>
+        </span>`).join('');
+
+      const editDropdownItems = BRANDS_LIST_LOCAL.map(b => `
+        <label style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--radius-lg);
+                      cursor:pointer;font-size:14px;transition:background .1s"
+               onmouseover="this.style.background='var(--muted)'"
+               onmouseout="this.style.background=''">
+          <input type="checkbox" value="${b}" ${assignedBrands.includes(b)?'checked':''}
+                 onchange="toggleEditBrand('${b}',this.checked)"
+                 style="width:15px;height:15px;accent-color:var(--primary);cursor:pointer">
+          ${b}
+        </label>`).join('');
+
+      return `<tr style="background:var(--card)">
+        <td style="color:var(--muted-foreground);font-size:14px;vertical-align:top;padding-top:28px">${realIdx+1}</td>
+        <td colspan="4">
+          <div style="padding:14px 0 18px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+              <div>
+                <label class="form-label">Supplier name</label>
+                <input id="edit-sup-name" class="form-input" value="${s.name}"
+                  style="height:44px;font-size:14px;font-weight:600" placeholder="Supplier name">
+              </div>
+              <div style="position:relative">
+                <label class="form-label">Brands carried by this supplier</label>
+                <div id="edit-brand-checkboxes"
+                  style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:8px 12px;
+                         background:var(--card);display:flex;flex-wrap:wrap;gap:6px;min-height:44px;
+                         cursor:pointer;align-items:center"
+                  onclick="toggleEditBrandDropdown()">
+                  <span id="edit-brand-placeholder" style="font-size:14px;color:var(--muted-foreground);${assignedBrands.length?'display:none':''}">Choose brands…</span>
+                  ${editBrandPills}
+                </div>
+                <div id="edit-brand-dropdown"
+                  style="display:none;position:absolute;z-index:50;background:var(--card);
+                         border:1px solid var(--border);border-radius:var(--radius-xl);
+                         box-shadow:var(--shadow-lg);padding:8px;margin-top:4px;width:100%">
+                  <div style="font-size:12px;color:var(--muted-foreground);padding:4px 8px;margin-bottom:4px;font-weight:500">Click to add a brand</div>
+                  <div style="display:flex;flex-direction:column;gap:2px">${editDropdownItems}</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+              <div>
+                <label class="form-label">Order method</label>
+                <select id="edit-sup-method" class="form-input" style="height:44px;cursor:pointer" onchange="toggleEditEmailFields()">
+                  <option value="manual" ${(s.orderMethod||'manual')==='manual'?'selected':''}>Manual</option>
+                  <option value="email" ${s.orderMethod==='email'?'selected':''}>Email</option>
+                </select>
+                <div id="edit-method-desc" style="font-size:14px;color:var(--muted-foreground);margin-top:7px;line-height:1.55">${s.orderMethod==='email'?'Restock will send the order by email with the product list attached.':'You place the order yourself (by phone, portal, or any other way). When the supplier sends you the invoice, upload it in the order to confirm it. Once the goods arrive, mark the order as received.'}</div>
+              </div>
+              <div id="edit-email-wrap" style="${s.orderMethod==='email'?'':'display:none'}">
+                <label class="form-label">Order email address(es)</label>
+                <input id="edit-sup-emails" class="form-input" value="${(s.emails||[]).join(', ')}" placeholder="orders@supplier.com, backup@supplier.com" style="height:44px">
+                <div style="font-size:14px;color:var(--muted-foreground);margin-top:7px">Separate multiple addresses with a comma</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onclick="saveSupplierEdit(${realIdx})" class="btn btn-default" style="font-weight:600">Save</button>
+              <button onclick="editingSupIdx=-1;renderSupplierList()" class="btn btn-outline">Cancel</button>
+            </div>
+          </div>
+        </td>
+      </tr>`;
+    }
+
+    // Normal row
+    const pills = assignedBrands.map(b =>
+      `<span style="font-size:12px;font-weight:500;padding:2px 10px;border-radius:999px;
+                    background:var(--zinc-100);border:1px solid var(--zinc-200);color:var(--foreground)">${b}</span>`
+    ).join(' ');
+
+    return `<tr>
+      <td style="color:var(--muted-foreground);font-size:14px">${realIdx+1}</td>
+      <td>
+        <div style="font-size:14px;font-weight:600">${s.name}</div>
+      </td>
+      <td><div style="display:flex;flex-wrap:wrap;gap:5px">${assignedBrands.length ? pills : '<span style="font-size:14px;color:var(--muted-foreground)">No brands assigned</span>'}</div></td>
+      <td>
+        ${s.orderMethod === 'email'
+          ? `<div style="font-size:14px;font-weight:500;color:var(--info-fg)">✉ Email</div>
+             <div style="font-size:11px;color:var(--muted-foreground);margin-top:2px">${(s.emails||[]).join(', ')||'—'}</div>`
+          : `<div style="font-size:14px;color:var(--muted-foreground)">Manual</div>`}
+      </td>
+      <td style="text-align:right">
+        <div style="display:flex;gap:6px;justify-content:flex-end">
+          <button onclick="editingSupIdx=${realIdx};renderSupplierList()" class="btn btn-outline btn-sm">Edit</button>
+          <button onclick="removeSupplier(${realIdx})" class="btn btn-ghost btn-sm"
+            style="color:var(--muted-foreground)"
+            onmouseover="this.style.color='var(--destructive-fg)'"
+            onmouseout="this.style.color='var(--muted-foreground)'">Remove</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted-foreground);font-size:14px">No suppliers yet. Add your first supplier above.</td></tr>';
+
+  if (countEl) countEl.textContent = sups.length + ' supplier' + (sups.length!==1?'s':'');
+  if (pagEl) {
+    pagEl.innerHTML = totalPages <= 1 ? '' : Array.from({length:totalPages},(_,pi)=>
+      `<button onclick="supPage=${pi+1};renderSupplierList()"
+        class="btn btn-sm" style="min-width:30px;${supPage===pi+1?'background:var(--foreground);color:var(--card);':''}">
+        ${pi+1}</button>`
+    ).join('');
+  }
+}
+
+function toggleBrandLabel(cb, key) {
+  const lbl = document.getElementById('lbl-' + key);
+  if (!lbl) return;
+  lbl.style.background = cb.checked ? 'var(--primary)' : 'var(--card)';
+  lbl.style.color = cb.checked ? 'white' : 'var(--foreground)';
+  lbl.style.borderColor = cb.checked ? 'var(--primary)' : 'var(--border)';
+}
+
+let editDropdownOpen = false;
+function toggleEditBrandDropdown() {
+  const dd = document.getElementById('edit-brand-dropdown');
+  if (!dd) return;
+  editDropdownOpen = !editDropdownOpen;
+  dd.style.display = editDropdownOpen ? 'block' : 'none';
+  if (editDropdownOpen) {
+    setTimeout(() => document.addEventListener('click', closeEditBrandDropdown, {once:true}), 10);
+  }
+}
+function closeEditBrandDropdown(e) {
+  const wrap = document.getElementById('edit-brand-checkboxes');
+  const dd = document.getElementById('edit-brand-dropdown');
+  if (wrap && !wrap.contains(e.target) && dd && !dd.contains(e.target)) {
+    dd.style.display = 'none';
+    editDropdownOpen = false;
+  }
+}
+function toggleEditBrand(brand, checked) {
+  const wrap = document.getElementById('edit-brand-checkboxes');
+  const ph = document.getElementById('edit-brand-placeholder');
+  if (!wrap) return;
+  if (checked) {
+    if (!wrap.querySelector(`.edit-sel-pill[data-brand="${brand}"]`)) {
+      const pill = document.createElement('span');
+      pill.className = 'edit-sel-pill';
+      pill.dataset.brand = brand;
+      pill.style.cssText = 'display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:500;padding:4px 8px 4px 12px;border-radius:999px;background:var(--primary-muted);border:1.5px solid var(--primary-border);color:var(--primary);line-height:1';
+      pill.innerHTML = `${brand}<button type="button" onclick="event.stopPropagation();removeEditBrandChip('${brand}')" style="background:none;border:none;cursor:pointer;color:var(--primary);font-size:14px;line-height:1;padding:0;margin-left:2px;opacity:.7;display:flex;align-items:center" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">×</button>`;
+      wrap.insertBefore(pill, ph);
+    }
+  } else {
+    wrap.querySelector(`.edit-sel-pill[data-brand="${brand}"]`)?.remove();
+  }
+  if (ph) ph.style.display = wrap.querySelectorAll('.edit-sel-pill').length ? 'none' : '';
+}
+function removeEditBrandChip(brand) {
+  document.querySelector(`#edit-brand-checkboxes .edit-sel-pill[data-brand="${brand}"]`)?.remove();
+  const cb = document.querySelector(`#edit-brand-dropdown input[value="${brand}"]`);
+  if (cb) cb.checked = false;
+  const wrap = document.getElementById('edit-brand-checkboxes');
+  const ph = document.getElementById('edit-brand-placeholder');
+  if (wrap && ph) ph.style.display = wrap.querySelectorAll('.edit-sel-pill').length ? 'none' : '';
+}
+
+function toggleNewEmailFields() {
+  const method = document.getElementById('new-sup-method')?.value;
+  const wrap = document.getElementById('new-email-wrap');
+  const desc = document.getElementById('new-method-desc');
+  if (wrap) wrap.style.display = method === 'email' ? '' : 'none';
+  if (desc) desc.textContent = method === 'email'
+    ? 'Restock will send the order by email with the product list attached.'
+    : 'You place the order yourself (by phone, portal, or any other way). When the supplier sends you the invoice, upload it in the order to confirm it. Once the goods arrive, mark the order as received.';
+}
+function toggleEditEmailFields() {
+  const method = document.getElementById('edit-sup-method')?.value;
+  const wrap = document.getElementById('edit-email-wrap');
+  const desc = document.getElementById('edit-method-desc');
+  if (wrap) wrap.style.display = method === 'email' ? '' : 'none';
+  if (desc) desc.textContent = method === 'email'
+    ? 'Restock will send the order by email with the product list attached.'
+    : 'You place the order yourself (by phone, portal, or any other way). When the supplier sends you the invoice, upload it in the order to confirm it. Once the goods arrive, mark the order as received.';
+}
+
+function saveSupplierEdit(idx) {
+  const sups = suppliersLoad();
+  const s = sups[idx];
+  if (!s) return;
+
+  const nameEl = document.getElementById('edit-sup-name');
+  if (nameEl && nameEl.value.trim()) s.name = nameEl.value.trim();
+  const methodEl = document.getElementById('edit-sup-method');
+  if (methodEl) {
+    s.orderMethod = methodEl.value;
+    if (methodEl.value === 'email') {
+      const emailsEl = document.getElementById('edit-sup-emails');
+      s.emails = emailsEl ? emailsEl.value.split(',').map(e=>e.trim()).filter(Boolean) : [];
+    } else {
+      s.emails = [];
+    }
+  }
+  suppliersSave(sups);
+
+  // Update brand mapping
+  const mapping = typeof brandSupplierLoad === 'function' ? brandSupplierLoad() : {};
+  const checked = [...document.querySelectorAll('#edit-brand-checkboxes .edit-sel-pill')].map(p => p.dataset.brand);
+  const BRANDS_LIST_LOCAL2 = ['Medicube','Anua','Round Lab','Isntree','COSRX','Some By Mi','Klairs','Dr. Jart+'];
+  BRANDS_LIST_LOCAL2.forEach(b => {
+    if (checked.includes(b)) mapping[b] = s.id;
+    else if (mapping[b] === s.id) delete mapping[b];
+  });
+  if (typeof brandSupplierSave === 'function') brandSupplierSave(mapping);
+  if (typeof BRAND_SUPPLIER !== 'undefined') Object.assign(BRAND_SUPPLIER, mapping);
+
+  editingSupIdx = -1;
+  renderSupplierList();
+  showToast('Supplier updated', 'success');
+}
+
+function renderBrandAssignments() { /* moved to Reorder rules tab */ }
+
+// ── Brand multi-select dropdown ─────────────────────────────────
+const BRANDS_ALL = ['Medicube','Anua','Round Lab','Isntree','COSRX','Some By Mi','Klairs','Dr. Jart+'];
+let selectedBrands = new Set();
+let dropdownOpen = false;
+
+function initBrandDropdown() {
+  const list = document.getElementById('brand-dropdown-list');
+  if (!list) return;
+  list.innerHTML = BRANDS_ALL.map(b => `
+    <label style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--radius-lg);
+                  cursor:pointer;font-size:14px;transition:background .1s"
+           onmouseover="this.style.background='var(--muted)'"
+           onmouseout="this.style.background=''">
+      <input type="checkbox" value="${b}" onchange="toggleBrand('${b}',this.checked)"
+             style="width:15px;height:15px;accent-color:var(--primary);cursor:pointer">
+      ${b}
+    </label>`).join('');
+}
+
+function toggleBrandDropdown() {
+  const dd = document.getElementById('brand-dropdown');
+  dropdownOpen = !dropdownOpen;
+  dd.style.display = dropdownOpen ? 'block' : 'none';
+  if (dropdownOpen) {
+    // Close on outside click
+    setTimeout(() => document.addEventListener('click', closeBrandDropdown, {once:true}), 10);
+  }
+}
+function closeBrandDropdown(e) {
+  const wrap = document.getElementById('brand-checkboxes');
+  const dd = document.getElementById('brand-dropdown');
+  if (wrap && !wrap.contains(e.target) && dd && !dd.contains(e.target)) {
+    dd.style.display = 'none';
+    dropdownOpen = false;
+  }
+}
+function toggleBrand(brand, checked) {
+  checked ? selectedBrands.add(brand) : selectedBrands.delete(brand);
+  updateBrandPills();
+}
+function updateBrandPills() {
+  const wrap = document.getElementById('brand-checkboxes');
+  const ph = document.getElementById('brand-placeholder');
+  if (!wrap) return;
+  wrap.querySelectorAll('.sel-pill').forEach(p => p.remove());
+  if (selectedBrands.size === 0) {
+    ph.style.display = '';
+  } else {
+    ph.style.display = 'none';
+    [...selectedBrands].forEach(b => {
+      const pill = document.createElement('span');
+      pill.className = 'sel-pill';
+      pill.style.cssText = [
+        'display:inline-flex;align-items:center;gap:5px',
+        'font-size:14px;font-weight:500',
+        'padding:4px 8px 4px 12px',
+        'border-radius:999px',
+        'background:var(--primary-muted)',
+        'border:1.5px solid var(--primary-border)',
+        'color:var(--primary)',
+        'line-height:1'
+      ].join(';');
+      pill.innerHTML = `${b}<button type="button"
+        onclick="event.stopPropagation();removeBrandChip('${b}')"
+        style="background:none;border:none;cursor:pointer;color:var(--primary);
+               font-size:14px;line-height:1;padding:0;margin-left:2px;opacity:.7;display:flex;align-items:center"
+        onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">×</button>`;
+      wrap.insertBefore(pill, ph);
+    });
+  }
+  // Sync checkboxes in dropdown
+  wrap.querySelectorAll('#brand-dropdown-list input[type=checkbox]') && null;
+  document.querySelectorAll('#brand-dropdown-list input[type=checkbox]').forEach(cb => {
+    cb.checked = selectedBrands.has(cb.value);
+  });
+}
+
+function removeBrandChip(brand) {
+  selectedBrands.delete(brand);
+  updateBrandPills();
+}
+
+function addSupplier() {
+  const name = document.getElementById('new-sup-name')?.value.trim();
+  if (!name) { showToast('Enter a supplier name', 'warning'); return; }
+  if (!selectedBrands.size) { showToast('Select at least one brand', 'warning'); return; }
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+  const sups = suppliersLoad();
+  if (sups.find(s => s.id === id)) { showToast('Supplier already exists', 'warning'); return; }
+  const method = document.getElementById('new-sup-method')?.value || 'manual';
+  const emailsRaw = document.getElementById('new-sup-emails')?.value || '';
+  const emails = method === 'email' ? emailsRaw.split(',').map(e=>e.trim()).filter(Boolean) : [];
+  sups.push({ id, name, orderMethod: method, emails });
+  suppliersSave(sups);
+  // Save brand assignments
+  const mapping = brandSupplierLoad();
+  selectedBrands.forEach(b => mapping[b] = id);
+  brandSupplierSave(mapping);
+  if (typeof BRAND_SUPPLIER !== 'undefined') Object.assign(BRAND_SUPPLIER, mapping);
+  // Reset form
+  document.getElementById('new-sup-name').value = '';
+  if (document.getElementById('new-sup-emails')) document.getElementById('new-sup-emails').value = '';
+  if (document.getElementById('new-sup-method')) document.getElementById('new-sup-method').value = 'manual';
+  if (document.getElementById('new-email-wrap')) document.getElementById('new-email-wrap').style.display = 'none';
+  selectedBrands.clear();
+  updateBrandPills();
+  document.querySelectorAll('#brand-dropdown-list input[type=checkbox]').forEach(cb => cb.checked = false);
+  renderSupplierList();
+  showToast('Supplier added ✓', 'success');
+}
+
+function removeSupplier(i) {
+  const sups = suppliersLoad();
+  sups.splice(i, 1);
+  suppliersSave(sups);
+  renderSupplierList();
+  renderBrandAssignments();
+}
+
+
+
+// Init suppliers section
+document.addEventListener('DOMContentLoaded', () => {
+  // Small delay to ensure cart.js globals are ready
+  setTimeout(() => {
+    renderSupplierList();
+    initBrandDropdown();
+  }, 50);
+});
+
+</script>
+</body>
+</html>
