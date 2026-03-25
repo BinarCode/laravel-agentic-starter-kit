@@ -1,86 +1,140 @@
+# PHP & Laravel Coding Standards (Spatie)
+
 ## PHP Standards
 
 - Follow PSR-1, PSR-2, and PSR-12
+- `declare(strict_types=1)` in every file
 - Use camelCase for non-public-facing strings
 - Use short nullable notation: `?string` not `string|null`
 - Always specify `void` return types when methods return nothing
+- String interpolation over concatenation
 
 ## Class Structure
-- Use typed properties, not docblocks:
-- Constructor property promotion when all properties can be promoted:
-- One trait per line:
+
+- Use typed properties, not docblocks
+- Constructor property promotion when all properties can be promoted
+- One trait per line
+- Always use curly braces for control structures, even for single-line bodies
 
 ## Type Declarations & Docblocks
+
 - Use typed properties over docblocks
 - Specify return types including `void`
-- Use short nullable syntax: `?Type` not `Type|null`
-- Document iterables with generics:
-```php
+- Don't use docblocks for fully type-hinted methods (unless description needed)
+- **Always import classnames in docblocks** — never use fully qualified names
+- Use one-line docblocks when possible: `/** @var string */`
+- Most common type should be first in multi-type docblocks
+- If one parameter needs docblock, add docblocks for all parameters
+- For iterables, always specify key and value types
+- Use array shape notation for fixed keys, each key on its own line
+
+@boostsnippet('Generics for iterables', 'php')
 /** @return Collection<int, User> */
 public function getUsers(): Collection
-```
+{
+    // ...
+}
+@endboostsnippet
 
-### Docblock Rules
-- Don't use docblocks for fully type-hinted methods (unless description needed)
-- **Always import classnames in docblocks** - never use fully qualified names:
-```php
+@boostsnippet('Import classnames in docblocks', 'php')
 use \Spatie\Url\Url;
 /** @return Url */
-```
-- Use one-line docblocks when possible: `/** @var string */`
-- Most common type should be first in multi-type docblocks:
-```php
-/** @var Collection|SomeWeirdVendor\Collection */
-```
-- If one parameter needs docblock, add docblocks for all parameters
-- For iterables, always specify key and value types:
-```php
+@endboostsnippet
+
+@boostsnippet('Array param types', 'php')
 /**
-* @param array<int, MyObject> $myArray
-* @param int $typedArgument
-*/
+ * @param array<int, MyObject> $myArray
+ * @param int $typedArgument
+ */
 function someFunction(array $myArray, int $typedArgument) {}
-```
-- Use array shape notation for fixed keys, put each key on it's own line:
-```php
+@endboostsnippet
+
+@boostsnippet('Array shape notation', 'php')
 /** @return array{
-first: SomeClass,
-second: SomeClass
+   first: SomeClass,
+   second: SomeClass
 } */
-```
+@endboostsnippet
 
 ## Control Flow
+
 - **Happy path last**: Handle error conditions first, success case last
 - **Avoid else**: Use early returns instead of nested conditions
 - **Separate conditions**: Prefer multiple if statements over compound conditions
 - **Always use curly brackets** even for single statements
 - **Ternary operators**: Each part on own line unless very short
 
-```php
-// Happy path last
+@boostsnippet('Happy path last pattern', 'php')
 if (! $user) {
-return null;
+    return null;
 }
 
 if (! $user->isActive()) {
-return null;
+    return null;
 }
 
-// Process active user...
+// Happy path last — process active user...
+return $user->process();
+@endboostsnippet
 
+@boostsnippet('Ternary patterns', 'php')
 // Short ternary
 $name = $isFoo ? 'foo' : 'bar';
 
 // Multi-line ternary
 $result = $object instanceof Model ?
-$object->name :
-'A default value';
+    $object->name :
+    'A default value';
 
 // Ternary instead of else
 $condition
-? $this->doSomething()
-: $this->doSomethingElse();
-```
+    ? $this->doSomething()
+    : $this->doSomethingElse();
+@endboostsnippet
+
+## Comments
+
+Code should be self-documenting. Comments only for *why*, never for *what*. Adding comments should never be the first tactic to make code readable.
+
+@boostsnippet('Self-documenting code over comments', 'php')
+// BAD:
+// Get the failed checks for this site
+$checks = $site->checks()->where('status', 'failed')->get();
+
+// GOOD:
+$failedChecks = $site->checks()->where('status', 'failed')->get();
+@endboostsnippet
+
+- Don't add comments that describe what the code does — make the code describe itself
+- Use descriptive variable names instead of generic names + comments
+- Only add comments when explaining *why* something non-obvious is done
+- Never add comments to tests — test names should be descriptive enough
+
+## Whitespace
+
+- Add blank lines between statements for readability
+- Exception: sequences of equivalent single-line operations
+- No extra empty lines between `{}` brackets
+- Let code "breathe" — avoid cramped formatting
+
+## Validation
+
+- Use array notation for multiple rules (easier for custom rule classes)
+- Prefer DTO validation via Spatie Data over Form Requests for simple cases
+- Custom validation rules use snake_case
+
+@boostsnippet('Validation array notation', 'php')
+public function rules(): array
+{
+    return [
+        'email' => ['required', 'email'],
+    ];
+}
+@endboostsnippet
+
+## Enums
+
+- PascalCase values: `case Draft`, `case InTransit`
 
 ## Laravel Conventions
 
@@ -91,7 +145,7 @@ $condition
 - Use tuple notation: `[Controller::class, 'method']`
 
 ### Controllers
-- Plural resource names (`PostsController`)
+- Plural resource names (`BrandsController`)
 - Stick to CRUD methods (`index`, `create`, `store`, `show`, `edit`, `update`, `destroy`)
 - Extract new controllers for non-CRUD actions
 
@@ -103,139 +157,45 @@ $condition
 
 ### Artisan Commands
 - Names: kebab-case (`delete-old-records`)
-- Always provide feedback (`$this->comment('All ok!')`)
-- Show progress for loops, summary at end
-- Put output BEFORE processing item (easier debugging):
-```php
+- Always provide feedback
+- Put output BEFORE processing item (easier debugging)
+
+@boostsnippet('Artisan command output pattern', 'php')
 $items->each(function(Item $item) {
-$this->info("Processing item id `{$item->id}`...");
-$this->processItem($item);
+    $this->info("Processing item id `{$item->id}`...");
+    $this->processItem($item);
 });
 
 $this->comment("Processed {$items->count()} items.");
-```
+@endboostsnippet
 
-## Strings & Formatting
-
-- **String interpolation** over concatenation:
-
-## Enums
-
-- Use PascalCase for enum values:
-
-## Comments
-
-Be very critical about adding comments as they often become outdated and can mislead over time. Code should be self-documenting through descriptive variable and function names.
-
-Adding comments should never be the first tactic to make code readable.
-
-*Instead of this:*
-```php
-// Get the failed checks for this site
-$checks = $site->checks()->where('status', 'failed')->get();
-```
-
-*Do this:*
-```php
-$failedChecks = $site->checks()->where('status', 'failed')->get();
-```
-
-**Guidelines:**
-- Don't add comments that describe what the code does - make the code describe itself
-- Short, readable code doesn't need comments explaining it
-- Use descriptive variable names instead of generic names + comments
-- Only add comments when explaining *why* something non-obvious is done, not *what* is being done
-- Never add comments to tests - test names should be descriptive enough
-
-## Whitespace
-
-- Add blank lines between statements for readability
-- Exception: sequences of equivalent single-line operations
-- No extra empty lines between `{}` brackets
-- Let code "breathe" - avoid cramped formatting
-
-## Validation
-
-- Use array notation for multiple rules (easier for custom rule classes):
-```php
-public function rules() {
-return [
-'email' => ['required', 'email'],
-];
-}
-```
-- Custom validation rules use snake_case:
-```php
-Validator::extend('organisation_type', function ($attribute, $value) {
-return OrganisationType::isValid($value);
-});
-```
-
-## Blade Templates
-
-- Indent with 4 spaces
-- No spaces after control structures:
-```blade
-@if($condition)
-    Something
-@endif
-```
-
-## Authorization
-
+### Authorization
 - Policies use camelCase: `Gate::define('editPost', ...)`
 - Use CRUD words, but `view` instead of `show`
 
-## Translations
+### Migrations
+- Only `up()` methods, no `down()`
 
-- Use `__()` function over `@lang`:
+## Naming Conventions
 
-## API Routing
-
-- Use plural resource names: `/errors`
-- Use kebab-case: `/error-occurrences`
-- Limit deep nesting for simplicity:
-```
-/error-occurrences/1
-/errors/1/occurrences
-```
+| Type | Convention | Example |
+|------|-----------|---------|
+| Classes | PascalCase | `PurchaseOrder`, `OrderStatus` |
+| Methods/Variables | camelCase | `getUserName`, `$firstName` |
+| Routes | kebab-case | `/purchase-orders` |
+| Config keys | snake_case | `woocommerce.api_key` |
+| Controllers | plural + Controller | `BrandsController` |
+| Jobs | action-based | `SyncWooCommerceProductsJob` |
+| Events | tense-based | `PurchaseOrderReceived` |
+| Listeners | action + Listener | `SendInvitationMailListener` |
+| Commands | action + Command | `SyncProductsCommand` |
+| Mailables | purpose + Mail | `AccountActivatedMail` |
+| Enums | descriptive, no prefix | `PurchaseOrderStatus` |
 
 ## Testing
 
-- Keep test classes in same file when possible
-- Use descriptive test method names
-- Follow the arrange-act-assert pattern
-
-## Quick Reference
-
-### Naming Conventions
-- **Classes**: PascalCase (`UserController`, `OrderStatus`)
-- **Methods/Variables**: camelCase (`getUserName`, `$firstName`)
-- **Routes**: kebab-case (`/open-source`, `/user-profile`)
-- **Config files**: kebab-case (`pdf-generator.php`)
-- **Config keys**: snake_case (`chrome_path`)
-- **Artisan commands**: kebab-case (`php artisan delete-old-records`)
-
-### File Structure
-- Controllers: plural resource name + `Controller` (`PostsController`)
-- Views: camelCase (`openSource.blade.php`)
-- Jobs: action-based (`CreateUser`, `SendEmailNotification`)
-- Events: tense-based (`UserRegistering`, `UserRegistered`)
-- Listeners: action + `Listener` suffix (`SendInvitationMailListener`)
-- Commands: action + `Command` suffix (`PublishScheduledPostsCommand`)
-- Mailables: purpose + `Mail` suffix (`AccountActivatedMail`)
-- Resources/Transformers: plural + `Resource`/`Transformer` (`UsersResource`)
-- Enums: descriptive name, no prefix (`OrderStatus`, `BookingType`)
-
-### Migrations
-- do not write down methods in migrations, only up methods
-
-### Code Quality Reminders
-
-#### PHP
-- Use typed properties over docblocks
-- Prefer early returns over nested if/else
-- Use constructor property promotion when all properties can be promoted
-- Avoid `else` statements when possible
-- Use string interpolation over concatenation
-- Always use curly braces for control structures
+- Every change must be tested. Run `php artisan test --compact` with filename or filter.
+- Arrange-act-assert pattern. Descriptive test method names.
+- Unit test actions directly (pass DTOs, assert outcomes).
+- Feature test controllers (HTTP request/response cycle).
+- No comments in tests — test names should be descriptive enough.

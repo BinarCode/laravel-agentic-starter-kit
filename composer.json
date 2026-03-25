@@ -31,7 +31,8 @@
         "pestphp/pest-plugin-laravel": "^5.0",
         "pestphp/pest-plugin-type-coverage": "^5.0",
         "rector/rector": "^2.3.9",
-        "roave/security-advisories": "dev-latest"
+        "roave/security-advisories": "dev-latest",
+        "spatie/boost-spatie-guidelines": "*"
     },
     "autoload": {
         "psr-4": {
