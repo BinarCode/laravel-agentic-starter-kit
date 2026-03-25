@@ -1,208 +1,292 @@
-<laravel-boost-guidelines>
-=== .ai/app.actions rules ===
+# Restock — Project Rules
 
-# App/Actions guidelines
+> DDD principles from "Laravel Beyond CRUD" (Spatie). MANDATORY — overrides default Laravel conventions.
 
-- This application uses the Action pattern and prefers for much logic to live in reusable and composable Action classes.
-- Actions live in `app/Actions`, they are named based on what they do, with no suffix.
-- Actions will be called from many different places: jobs, commands, HTTP requests, API requests, MCP requests, and more.
-- Create dedicated Action classes for business logic with a single `handle()` method.
-- Inject dependencies via constructor using private properties.
-- Create new actions with `php artisan make:action "{name}" --no-interaction`
-- Wrap complex operations in `DB::transaction()` within actions when multiple models are involved.
-- Some actions won't require dependencies via `__construct` and they can use just the `handle()` method.
+## Two-Layer Architecture
 
-<!-- Example action class -->
+1. **Domain Layer** (`app/Domain/`) — Pure business logic. NEVER depends on HTTP.
+2. **Application Layer** (`app/Http/`, `app/Jobs/`, `app/Console/`) — Thin wrappers that consume the domain.
+
+## Mandatory Patterns
+
+### Actions
+
+All business logic lives in `app/Domain/{Domain}/Actions/`. `final readonly` class with a single `__invoke()` method. Composable via constructor injection.
+
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace App\Actions;
+namespace App\Domain\Ordering\Actions;
 
-final readonly class CreateFavorite
+use App\Domain\Ordering\Data\CreatePurchaseOrderData;
+use App\Domain\Ordering\Models\PurchaseOrder;
+use Illuminate\Support\Facades\DB;
+
+final readonly class CreatePurchaseOrder
 {
-    public function __construct(private FavoriteService $favorites)
-    {
-        //
-    }
+    public function __construct(
+        private CreatePurchaseOrderLine $createLine,
+    ) {}
 
-    public function handle(User $user, string $favorite): bool
+    public function __invoke(CreatePurchaseOrderData $data): PurchaseOrder
     {
-        return $this->favorites->add($user, $favorite);
+        return DB::transaction(function () use ($data): PurchaseOrder {
+            $order = PurchaseOrder::create([
+                'supplier_id' => $data->supplierId,
+                'notes' => $data->notes,
+            ]);
+
+            foreach ($data->lines as $lineData) {
+                ($this->createLine)($order, $lineData);
+            }
+
+            return $order;
+        });
     }
 }
 ```
 
-=== .ai/general rules ===
+### DTOs (Spatie Laravel Data v4)
 
-# General Guidelines
+All data entering the domain is wrapped in a DTO extending `Spatie\LaravelData\Data`. Lives in `app/Domain/{Domain}/Data/`.
 
-- Don't include any superfluous PHP Annotations, except ones that start with `@` for typing variables.
-
-=== foundation rules ===
-
-# Laravel Boost Guidelines
-
-The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to ensure the best experience when building Laravel applications.
-
-## Foundational Context
-
-This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
-
-- php - 8.5.2
-- inertiajs/inertia-laravel (INERTIA) - v3
-- laravel/fortify (FORTIFY) - v1
-- laravel/framework (LARAVEL) - v12
-- laravel/prompts (PROMPTS) - v0
-- laravel/wayfinder (WAYFINDER) - v0
-- larastan/larastan (LARASTAN) - v3
-- laravel/mcp (MCP) - v0
-- laravel/pint (PINT) - v1
-- pestphp/pest (PEST) - v4
-- phpunit/phpunit (PHPUNIT) - v12
-- rector/rector (RECTOR) - v2
-- @inertiajs/vue3 (INERTIA) - v3
-- tailwindcss (TAILWINDCSS) - v4
-- vue (VUE) - v3
-- @laravel/vite-plugin-wayfinder (WAYFINDER) - v0
-- oxlint (Oxlint) - v1
-- prettier (PRETTIER) - v3
-
-## Skills Activation
-
-This project has domain-specific skills available. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
-
-- `fortify-development` — Laravel Fortify headless authentication backend development. Activate when implementing authentication features including login, registration, password reset, email verification, two-factor authentication (2FA/TOTP), profile updates, headless auth, authentication scaffolding, or auth guards in Laravel applications.
-
-## Conventions
-
-- You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
-- Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
-- Check for existing components to reuse before writing a new one.
-
-## Verification Scripts
-
-- Do not create verification scripts or tinker when tests cover that functionality and prove they work. Unit and feature tests are more important.
-
-## Application Structure & Architecture
-
-- Stick to existing directory structure; don't create new base folders without approval.
-- Do not change the application's dependencies without approval.
-
-## Frontend Bundling
-
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `bun run build`, `bun run dev`, or `composer run dev`. Ask them.
-
-## Documentation Files
-
-- You must only create documentation files if explicitly requested by the user.
-
-## Replies
-
-- Be concise in your explanations - focus on what's important rather than explaining obvious details.
-
-=== boost rules ===
-
-# Laravel Boost
-
-- Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
-
-## Artisan Commands
-
-- Run Artisan commands directly via the command line (e.g., `php artisan route:list`, `php artisan tinker --execute "..."`).
-- Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
-
-## URLs
-
-- Whenever you share a project URL with the user, you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain/IP, and port.
-
-## Debugging
-
-- Use the `database-query` tool when you only need to read from the database.
-- Use the `database-schema` tool to inspect table structure before writing migrations or models.
-- To execute PHP code for debugging, run `php artisan tinker --execute "your code here"` directly.
-- To read configuration values, read the config files directly or run `php artisan config:show [key]`.
-- To inspect routes, run `php artisan route:list` directly.
-- To check environment variables, read the `.env` file directly.
-
-## Reading Browser Logs With the `browser-logs` Tool
-
-- You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
-- Only recent browser logs will be useful - ignore old logs.
-
-## Searching Documentation (Critically Important)
-
-- Boost comes with a powerful `search-docs` tool you should use before trying other approaches when working with Laravel or Laravel ecosystem packages. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
-- Search the documentation before making code changes to ensure we are taking the correct approach.
-- Use multiple, broad, simple, topic-based queries at once. For example: `['rate limiting', 'routing rate limiting', 'routing']`. The most relevant results will be returned first.
-- Do not add package names to queries; package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
-
-### Available Search Syntax
-
-1. Simple Word Searches with auto-stemming - query=authentication - finds 'authenticate' and 'auth'.
-2. Multiple Words (AND Logic) - query=rate limit - finds knowledge containing both "rate" AND "limit".
-3. Quoted Phrases (Exact Position) - query="infinite scroll" - words must be adjacent and in that order.
-4. Mixed Queries - query=middleware "rate limit" - "middleware" AND exact phrase "rate limit".
-5. Multiple Queries - queries=["authentication", "middleware"] - ANY of these terms.
-
-=== php rules ===
-
-# PHP
-
-- Always use curly braces for control structures, even for single-line bodies.
-
-## Constructors
-
-- Use PHP 8 constructor property promotion in `__construct()`.
-    - `public function __construct(public GitHub $github) { }`
-- Do not allow empty `__construct()` methods with zero parameters unless the constructor is private.
-
-## Type Declarations
-
-- Always use explicit return type declarations for methods and functions.
-- Use appropriate PHP type hints for method parameters.
-
-<!-- Explicit Return Types and Method Params -->
 ```php
-protected function isAccessible(User $user, ?string $path = null): bool
+<?php
+
+declare(strict_types=1);
+
+namespace App\Domain\Ordering\Data;
+
+use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\DataCollection;
+
+final class CreatePurchaseOrderData extends Data
 {
-    ...
+    public function __construct(
+        public int $supplier_id,
+        #[DataCollectionOf(CreatePurchaseOrderLineData::class)]
+        public DataCollection $lines,
+        public ?string $notes = null,
+    ) {}
 }
 ```
 
-## Enums
+### Thin Controllers
 
-- Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
+Max 15 lines. Validate via DTO → call action → return Inertia response.
 
-## Comments
+```php
+public function store(Request $request, CreatePurchaseOrder $action): RedirectResponse
+{
+    $data = CreatePurchaseOrderData::from($request);
 
-- Prefer PHPDoc blocks over inline comments. Never use comments within the code itself unless the logic is exceptionally complex.
+    $order = $action($data);
 
-## PHPDoc Blocks
+    return redirect()->route('orders.show', $order);
+}
+```
 
-- Add useful array shape type definitions when appropriate.
+### Lean Models
 
-=== herd rules ===
+`app/Domain/{Domain}/Models/`. ONLY relationships, casts, accessors. No business logic. Extract scopes to QueryBuilders.
 
-# Laravel Herd
+### QueryBuilders
 
-- The application is served by Laravel Herd and will be available at: `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs for the user.
-- You must not run any commands to make the site available via HTTP(S). It is always available through Laravel Herd.
+`app/Domain/{Domain}/QueryBuilders/`. Extend `Builder`, register via `newEloquentBuilder()` on the model.
 
-=== tests rules ===
+### Enums
 
-# Test Enforcement
+`app/Domain/{Domain}/Enums/`. PHP native enums. Encapsulate labels, colors, allowed transitions.
 
-- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
-- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
+### Thin Jobs
 
-=== laravel/fortify rules ===
+Jobs call exactly one action via `__invoke()`. No business logic in jobs.
 
-# Laravel Fortify
+## NEVER
 
-- Fortify is a headless authentication backend that provides authentication routes and controllers for Laravel applications.
-- IMPORTANT: Always use the `search-docs` tool for detailed Laravel Fortify patterns and documentation.
-- IMPORTANT: Activate `developing-with-fortify` skill when working with Fortify authentication features.
+1. Business logic in models or controllers — use Actions
+2. Raw arrays as DTOs — use `Spatie\LaravelData\Data`
+3. Domain code importing HTTP classes (`Request`, `Controller`)
+4. Actions with `handle()` — use `__invoke()`
+5. Models/Actions in `app/Models/` or `app/Actions/` — use `app/Domain/{Domain}/`
+6. Actions longer than 50 lines — compose smaller actions
 
-</laravel-boost-guidelines>
+---
+
+## Stack
+
+- PHP 8.5 / Laravel 13 / Inertia v3 / Vue 3 / Tailwind v4
+- Auth: Fortify (headless) / UI: reka-ui + CVA + tailwind-merge / Icons: lucide-vue-next
+- Routing: Wayfinder / Testing: Pest / Quality: Pint, Rector, Larastan, Oxlint
+- Package manager: Bun
+
+## PHP Standards
+
+- Follow PSR-1, PSR-2, and PSR-12
+- `declare(strict_types=1)` in every file
+- Use camelCase for non-public-facing strings
+- Use short nullable notation: `?string` not `string|null`
+- Always specify `void` return types when methods return nothing
+- String interpolation over concatenation
+
+### Class Structure
+
+- Use typed properties, not docblocks
+- Constructor property promotion when all properties can be promoted
+- One trait per line
+
+### Type Declarations & Docblocks
+
+- Use typed properties over docblocks
+- Specify return types including `void`
+- Don't use docblocks for fully type-hinted methods (unless description needed)
+- **Always import classnames in docblocks** — never use fully qualified names
+- Use one-line docblocks when possible: `/** @var string */`
+- If one parameter needs docblock, add docblocks for all parameters
+- Document iterables with generics:
+  ```php
+  /** @return Collection<int, User> */
+  public function getUsers(): Collection
+  ```
+- For iterables, always specify key and value types:
+  ```php
+  /**
+   * @param array<int, MyObject> $myArray
+   * @param int $typedArgument
+   */
+  function someFunction(array $myArray, int $typedArgument) {}
+  ```
+- Use array shape notation for fixed keys, each key on its own line:
+  ```php
+  /** @return array{
+     first: SomeClass,
+     second: SomeClass
+  } */
+  ```
+
+### Control Flow
+
+- **Happy path last**: Handle error conditions first, success case last
+- **Avoid else**: Use early returns instead of nested conditions
+- **Separate conditions**: Prefer multiple if statements over compound conditions
+- **Always use curly brackets** even for single statements
+- **Ternary operators**: Each part on own line unless very short
+
+```php
+if (! $user) {
+    return null;
+}
+
+if (! $user->isActive()) {
+    return null;
+}
+
+// Happy path last — process active user...
+
+$name = $isFoo ? 'foo' : 'bar';
+
+$result = $object instanceof Model ?
+    $object->name :
+    'A default value';
+```
+
+### Comments
+
+Code should be self-documenting. Comments only for *why*, never for *what*.
+
+```php
+// BAD:
+// Get the failed checks for this site
+$checks = $site->checks()->where('status', 'failed')->get();
+
+// GOOD:
+$failedChecks = $site->checks()->where('status', 'failed')->get();
+```
+
+- Don't add comments that describe what the code does
+- Use descriptive variable names instead of generic names + comments
+- Never add comments to tests — test names should be descriptive enough
+
+### Whitespace
+
+- Add blank lines between statements for readability
+- Exception: sequences of equivalent single-line operations
+- No extra empty lines between `{}` brackets
+
+### Validation
+
+- Use array notation for multiple rules:
+  ```php
+  'email' => ['required', 'email'],
+  ```
+- Prefer DTO validation via Spatie Data over Form Requests for simple cases
+
+## Laravel Conventions
+
+### Routes
+- URLs: kebab-case (`/open-source`)
+- Route names: camelCase (`->name('openSource')`)
+- Parameters: camelCase (`{userId}`)
+- Use tuple notation: `[Controller::class, 'method']`
+
+### Controllers
+- Plural resource names (`BrandsController`)
+- Stick to CRUD methods (`index`, `create`, `store`, `show`, `edit`, `update`, `destroy`)
+- Extract new controllers for non-CRUD actions
+
+### Configuration
+- Files: kebab-case (`pdf-generator.php`)
+- Keys: snake_case (`chrome_path`)
+- Add service configs to `config/services.php`, don't create new files
+- Use `config()` helper, avoid `env()` outside config files
+
+### Artisan Commands
+- Names: kebab-case (`delete-old-records`)
+- Always provide feedback (`$this->comment('All ok!')`)
+- Put output BEFORE processing item (easier debugging):
+  ```php
+  $items->each(function(Item $item) {
+      $this->info("Processing item id `{$item->id}`...");
+      $this->processItem($item);
+  });
+
+  $this->comment("Processed {$items->count()} items.");
+  ```
+
+### Authorization
+- Policies use camelCase: `Gate::define('editPost', ...)`
+- Use CRUD words, but `view` instead of `show`
+
+### Migrations
+- Only `up()` methods, no `down()`
+
+### Enums
+- PascalCase values
+
+## Naming Conventions
+
+| Type | Convention | Example |
+|------|-----------|---------|
+| Classes | PascalCase | `PurchaseOrder`, `OrderStatus` |
+| Methods/Variables | camelCase | `getUserName`, `$firstName` |
+| Routes | kebab-case | `/purchase-orders` |
+| Config keys | snake_case | `woocommerce.api_key` |
+| Commands | kebab-case | `sync-products` |
+| Controllers | plural + Controller | `BrandsController` |
+| Jobs | action-based | `SyncWooCommerceProductsJob` |
+| Events | tense-based | `PurchaseOrderReceived` |
+| Listeners | action + Listener | `SendInvitationMailListener` |
+| Commands | action + Command | `SyncProductsCommand` |
+| Mailables | purpose + Mail | `AccountActivatedMail` |
+| Enums | descriptive, no prefix | `PurchaseOrderStatus` |
+
+## Testing
+
+- Every change must be tested. Run `php artisan test --compact` with filename or filter.
+- Arrange-act-assert pattern. Descriptive test method names.
+- Unit test actions directly (pass DTOs, assert outcomes).
+- Feature test controllers (HTTP request/response cycle).
+- No comments in tests — test names should be descriptive enough.

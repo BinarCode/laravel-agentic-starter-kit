@@ -19,7 +19,6 @@ Intelligent inventory restocking platform for WooCommerce stores. Monitors stock
 - **MCP**: laravel/mcp
 - **Testing**: Pest 5
 - **Deployment**: Laravel Forge
-- **Starter Kit**: [nunomaduro/laravel-starter-kit-inertia-vue](https://github.com/nunomaduro/laravel-starter-kit-inertia-vue)
 
 ## Getting Started
 
