@@ -1,18 +1,21 @@
 {
     "agents": [
-        "claude_code",
-        "cursor",
-        "junie"
+        "claude_code"
     ],
     "guidelines": true,
     "herd_mcp": false,
     "mcp": true,
     "nightwatch_mcp": false,
     "packages": [
-        "laravel/fortify"
+        "laravel/fortify",
+        "spatie/boost-spatie-guidelines"
     ],
     "sail": false,
     "skills": [
-        "fortify-development"
+        "wayfinder-development",
+        "inertia-vue-development",
+        "tailwindcss-development",
+        "fortify-development",
+        "spatie-laravel-php-standards"
     ]
 }
