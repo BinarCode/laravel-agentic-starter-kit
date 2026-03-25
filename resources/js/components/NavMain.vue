@@ -14,7 +14,6 @@ defineProps<{
     items: NavItem[];
 }>();
 
-
 const { isCurrentUrl } = useCurrentUrl();
 </script>
 

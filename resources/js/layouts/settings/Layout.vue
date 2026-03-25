@@ -30,7 +30,6 @@ const sidebarNavItems: NavItem[] = [
     },
 ];
 
-
 const { isCurrentOrParentUrl } = useCurrentUrl();
 </script>
 

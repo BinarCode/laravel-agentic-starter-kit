@@ -6,7 +6,6 @@ import { home } from '@/routes';
 const page = usePage();
 const name = page.props.name;
 
-
 defineProps<{
     title?: string;
     description?: string;

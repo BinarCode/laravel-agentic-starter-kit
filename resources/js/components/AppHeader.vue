@@ -42,20 +42,16 @@ type Props = {
     breadcrumbs?: BreadcrumbItem[];
 };
 
-
 const props = withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
 });
-
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 
-
 const activeItemStyles =
     'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
-
 
 const mainNavItems: NavItem[] = [
     {
@@ -64,7 +60,6 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
 ];
-
 
 const rightNavItems: NavItem[] = [
     {

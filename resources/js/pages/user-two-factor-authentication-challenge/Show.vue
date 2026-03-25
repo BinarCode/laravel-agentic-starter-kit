@@ -31,16 +31,13 @@ const authConfigContent = computed<TwoFactorConfigContent>(() => {
     };
 });
 
-
 const showRecoveryInput = ref<boolean>(false);
-
 
 const toggleRecoveryMode = (clearErrors: () => void): void => {
     showRecoveryInput.value = !showRecoveryInput.value;
     clearErrors();
     code.value = '';
 };
-
 
 const code = ref<string>('');
 </script>

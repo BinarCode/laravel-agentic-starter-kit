@@ -8,7 +8,6 @@ type Props = {
     breadcrumbs?: BreadcrumbItem[];
 };
 
-
 withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
 });
