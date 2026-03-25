@@ -6,6 +6,10 @@ Inspired by [nunomaduro/laravel-starter-kit-inertia-vue](https://github.com/nuno
 
 ## Why This Works
 
+### Guardrails that never sleep
+
+The single biggest benefit: **`composer test` runs automatically before every commit via a Claude Code hook**. This means every change — whether written by you or by AI — passes type coverage, unit tests, linting, and static analysis before it enters your codebase. The AI can't merge sloppy code because the guardrails catch it first. Your project stays within bounds even when you're moving fast.
+
 ### AI understands the rules because they're written down
 
 The `CLAUDE.md` file is a battle-tested set of project rules — DDD boundaries, actions pattern, DTO conventions, component strategy, and anti-patterns. When an AI assistant reads it, it doesn't guess your architecture: it follows it. Every controller stays thin, every action stays in the domain layer, every DTO uses Spatie Laravel Data. The AI becomes a team member that actually read the docs.
