@@ -4,6 +4,28 @@ A production-ready Laravel starter kit for building AI-powered applications with
 
 Inspired by [nunomaduro/laravel-starter-kit-inertia-vue](https://github.com/nunomaduro/laravel-starter-kit-inertia-vue), adapted to [BinarCode](https://binarcode.com) standards with DDD architecture, actions pattern, and agentic AI tooling.
 
+## Why This Works
+
+### AI understands the rules because they're written down
+
+The `CLAUDE.md` file is a battle-tested set of project rules — DDD boundaries, actions pattern, DTO conventions, component strategy, and anti-patterns. When an AI assistant reads it, it doesn't guess your architecture: it follows it. Every controller stays thin, every action stays in the domain layer, every DTO uses Spatie Laravel Data. The AI becomes a team member that actually read the docs.
+
+### Spatie coding standards, enforced automatically
+
+This kit ships with [Spatie's Laravel & PHP guidelines](https://spatie.be/guidelines) baked in — PSR-12, typed properties, constructor promotion, early returns, no-else patterns, and strict docblock rules. Rector and Pint enforce them on every `composer lint` run. The AI assistant follows the same standards because they're in the project rules.
+
+### 100% static analysis enforcement
+
+Larastan runs at maximum level on every `composer test`. Type errors don't ship. Combined with Pest's type coverage plugin, every function parameter, return type, and property is verified. This catches the kind of bugs that AI-generated code is most prone to — wrong types, missing nullable checks, implicit mixed returns.
+
+### Frontend architecture inspired by Spatie's approach
+
+The UI layer follows the component philosophy described in [Rethinking our frontend future at Spatie](https://spatie.be/blog/rethinking-our-frontend-future-at-spatie) — low-level primitives (shadcn-vue / reka-ui) wrapped into higher-level domain components in a `common` folder. As the project matures, you replace primitives with lighter, browser-native alternatives without rewriting pages. The two-tier strategy (`components/ui/` for shadcn primitives, `components/common/` for your abstractions) keeps UI code DRY and upgrade-friendly.
+
+### Agentic tooling built in
+
+Laravel Boost gives AI assistants direct access to your database schema, documentation, error logs, and browser console — no copy-pasting stack traces. Wayfinder generates type-safe route functions so the frontend never guesses endpoint URLs. Together, they turn AI coding assistants from code generators into context-aware collaborators.
+
 ## What's Included
 
 - **Laravel 13** with PHP 8.5
@@ -11,14 +33,14 @@ Inspired by [nunomaduro/laravel-starter-kit-inertia-vue](https://github.com/nuno
 - **Tailwind CSS v4** with shadcn-vue components (reka-ui + CVA + tailwind-merge)
 - **Laravel Fortify** — Headless authentication (login, register, password reset, email verification, 2FA)
 - **Laravel Wayfinder** — Type-safe route generation for frontend
-- **Laravel Boost** — MCP server for AI-assisted development (database queries, docs search, error logs)
+- **Laravel Boost** — MCP server for AI-assisted development
 - **Pest 5** — Testing with type coverage and browser testing plugins
 - **Rector + Pint** — Automated code quality and formatting
-- **Larastan** — Static analysis
+- **Larastan** — 100% static analysis at max level
 
 ## Architecture
 
-This starter follows DDD principles from "Laravel Beyond CRUD" (Spatie):
+DDD principles from "Laravel Beyond CRUD" (Spatie):
 
 ```
 app/
@@ -69,25 +91,10 @@ composer dev
 | `composer test` | Full test suite (type coverage, unit, linting, static analysis) |
 | `composer test:unit` | Pest tests with coverage |
 
-## AI-Powered Development
-
-This starter kit is designed to work with AI coding assistants like Claude Code. It includes:
-
-- **CLAUDE.md** — Project rules and architecture guidelines that AI assistants follow automatically
-- **Laravel Boost MCP** — Gives AI assistants access to your database schema, docs, error logs, and more
-- **Wayfinder** — Type-safe routes so AI-generated frontend code calls the right endpoints
-
-## Frontend Components
-
-Two-tier component strategy:
-
-1. **`components/ui/`** — shadcn-vue primitives (Button, Card, Dialog, etc.). Managed by the shadcn CLI.
-2. **`components/common/`** — Domain-specific components that wrap shadcn primitives into reusable abstractions.
-
 ## Credits
 
 - [nunomaduro/laravel-starter-kit-inertia-vue](https://github.com/nunomaduro/laravel-starter-kit-inertia-vue) — Original inspiration
-- [Spatie](https://spatie.be) — Laravel Beyond CRUD architecture and coding guidelines
+- [Spatie](https://spatie.be) — Laravel Beyond CRUD architecture, coding guidelines, and frontend philosophy
 - [BinarCode](https://binarcode.com) — Maintainers
 
 ## License
