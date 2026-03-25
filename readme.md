@@ -1,28 +1,52 @@
-# Restock
+# Laravel Agentic Starter Kit
 
-Intelligent inventory restocking platform for WooCommerce stores. Monitors stock levels, suggests reorder decisions, and automatically updates inventory when orders are received.
+A production-ready Laravel starter kit for building AI-powered applications with Inertia.js v3, Vue 3, and Tailwind CSS v4.
 
-## Core Workflow
+Inspired by [nunomaduro/laravel-starter-kit-inertia-vue](https://github.com/nunomaduro/laravel-starter-kit-inertia-vue), adapted to [BinarCode](https://binarcode.com) standards with DDD architecture, actions pattern, and agentic AI tooling.
 
-1. **Monitor** — Syncs with WooCommerce (webhook + polling fallback), tracks stock levels and daily sales velocity
-2. **Suggest** — AI calculates reorder urgency, quantities, and revenue-at-risk per product/brand
-3. **Order** — Build purchase orders, export as Excel, send to supplier
-4. **Confirm** — Upload supplier invoice (PDF/Excel), AI parses and matches to PO, user reviews diff
-5. **Receive** — Mark order as received, stock auto-updates in WooCommerce
+## What's Included
 
-## Tech Stack
+- **Laravel 13** with PHP 8.5
+- **Inertia.js v3** + **Vue 3** — SPA without SPA complexity
+- **Tailwind CSS v4** with shadcn-vue components (reka-ui + CVA + tailwind-merge)
+- **Laravel Fortify** — Headless authentication (login, register, password reset, email verification, 2FA)
+- **Laravel Wayfinder** — Type-safe route generation for frontend
+- **Laravel Boost** — MCP server for AI-assisted development (database queries, docs search, error logs)
+- **Pest 5** — Testing with type coverage and browser testing plugins
+- **Rector + Pint** — Automated code quality and formatting
+- **Larastan** — Static analysis
 
-- **Backend**: Laravel 13, PHP 8.5
-- **Frontend**: Inertia.js v3 + Vue 3 + Tailwind CSS v4
-- **UI**: reka-ui + CVA + tailwind-merge (shadcn-vue pattern)
-- **Auth**: Laravel Fortify
-- **MCP**: laravel/mcp
-- **Testing**: Pest 5
-- **Deployment**: Laravel Forge
+## Architecture
+
+This starter follows DDD principles from "Laravel Beyond CRUD" (Spatie):
+
+```
+app/
+├── Domain/               # Business logic grouped by domain
+│   └── {YourDomain}/
+│       ├── Actions/      # final readonly classes with __invoke()
+│       ├── Data/         # DTOs extending Spatie Laravel Data
+│       ├── Models/       # Lean Eloquent models (relationships + casts only)
+│       ├── Enums/        # PHP native enums
+│       ├── QueryBuilders/
+│       └── Events/
+├── Http/                 # Thin controllers, form requests, middleware
+├── Jobs/                 # Thin wrappers that call domain actions
+└── Console/              # Artisan commands that call domain actions
+```
+
+**Key rules:**
+- All business logic lives in Actions — never in controllers or models
+- Data flows through DTOs — never raw arrays
+- Domain code never depends on HTTP — the dependency arrow always points inward
 
 ## Getting Started
 
 ```bash
+# Clone the starter kit
+composer create-project binarcode/laravel-agentic-starter-kit my-app
+cd my-app
+
 # Install dependencies
 composer install
 bun install
@@ -38,11 +62,34 @@ composer dev
 
 ## Available Commands
 
-- `composer dev` — Start server, queue, logs, and Vite concurrently
-- `composer lint` — Run Rector, Pint, and Oxfmt
-- `composer test` — Full test suite (type coverage, unit tests, linting, static analysis)
-- `composer test:unit` — Pest tests with coverage
+| Command | Description |
+|---------|-------------|
+| `composer dev` | Start server, queue, logs, and Vite concurrently |
+| `composer lint` | Run Rector, Pint, and Oxfmt |
+| `composer test` | Full test suite (type coverage, unit, linting, static analysis) |
+| `composer test:unit` | Pest tests with coverage |
+
+## AI-Powered Development
+
+This starter kit is designed to work with AI coding assistants like Claude Code. It includes:
+
+- **CLAUDE.md** — Project rules and architecture guidelines that AI assistants follow automatically
+- **Laravel Boost MCP** — Gives AI assistants access to your database schema, docs, error logs, and more
+- **Wayfinder** — Type-safe routes so AI-generated frontend code calls the right endpoints
+
+## Frontend Components
+
+Two-tier component strategy:
+
+1. **`components/ui/`** — shadcn-vue primitives (Button, Card, Dialog, etc.). Managed by the shadcn CLI.
+2. **`components/common/`** — Domain-specific components that wrap shadcn primitives into reusable abstractions.
+
+## Credits
+
+- [nunomaduro/laravel-starter-kit-inertia-vue](https://github.com/nunomaduro/laravel-starter-kit-inertia-vue) — Original inspiration
+- [Spatie](https://spatie.be) — Laravel Beyond CRUD architecture and coding guidelines
+- [BinarCode](https://binarcode.com) — Maintainers
 
 ## License
 
-Proprietary — BinarCode SRL
+MIT
