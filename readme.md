@@ -99,6 +99,15 @@ composer dev
 | `composer test` | Full test suite (type coverage, unit, linting, static analysis) |
 | `composer test:unit` | Pest tests with coverage |
 
+## Claude Code Skills
+
+Reusable skills in `.claude/skills/` that Claude Code picks up automatically:
+
+| Skill | What it does |
+|-------|-------------|
+| **forge** | Manage Laravel Forge servers — deployments, .env, SSL, daemons, cron, nginx. Add your `FORGE_API_TOKEN` to `.env`. |
+| **github** | Manage GitHub Issues and Projects (v2) via `gh` CLI — useful when project management lives on GitHub. |
+
 ## Credits
 
 - [nunomaduro/laravel-starter-kit-inertia-vue](https://github.com/nunomaduro/laravel-starter-kit-inertia-vue) — Original inspiration
